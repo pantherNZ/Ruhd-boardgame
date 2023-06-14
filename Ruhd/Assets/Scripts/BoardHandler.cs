@@ -6,7 +6,7 @@ public class BoardHandler : MonoBehaviour
 {
     Dictionary<Vector2Int, CardComponent> board;
     
-    int EvaluateScore( Vector2Int pos, CardComponent newCard )
+    public int EvaluateScore( Vector2Int pos, CardComponent newCard )
     {
         return ScoreOneSideRule( pos, newCard ) +
             ScoreDiffRule( pos, newCard ) +
@@ -56,15 +56,16 @@ public class BoardHandler : MonoBehaviour
         var side = GetAdjacentCard( pos, Side.Up );
         if( side != null && side.Value.colour != newCard.data.sides[( int )Side.Up].colour )
             return Mathf.Abs( side.Value.value - newCard.data.sides[( int )Side.Up].value );
+        return 0;
     }
 
     int ScoreSameRule( Vector2Int pos, CardComponent newCard )
     {
-
+        return 0;
     }
 
     int ScorePatternRule( Vector2Int pos, CardComponent newCard )
     {
-
+        return 0;
     }
 }
