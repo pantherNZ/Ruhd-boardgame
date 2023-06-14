@@ -1,0 +1,3 @@
+[submodule "Ruhd/Assets/Utility"]
+	path = Ruhd/Assets/Utility
+	url = https://github.com/pantherNZ/UnityScriptUtility.git
