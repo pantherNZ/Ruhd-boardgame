@@ -20,9 +20,9 @@ public class DataHandler : MonoBehaviour
             var cardColours = colour.Split( ',' );
             var newCard = ScriptableObject.CreateInstance<CardData>();
 
-            for( int i = 0; i < ( int )Side.NumSides; ++i )
+            for( int i = 0; i < Utility.GetNumEnumValues<Side>(); ++i )
             {
-                newCard.sides[i] = new CardSide( int.Parse( cardNumbers[i].Trim() ), int.Parse( cardColours[i].Trim() ) );
+                newCard.sides[i] = new CardSide( newCard, int.Parse( cardNumbers[i].Trim() ), int.Parse( cardColours[i].Trim() ) );
             }
 
             AssetDatabase.CreateAsset( newCard, tilesImportPath + "/Tile" + idx + ".asset" );

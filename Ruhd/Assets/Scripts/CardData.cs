@@ -4,14 +4,16 @@ using UnityEngine;
 [Serializable]
 public struct CardSide
 {
-    public CardSide(int v, int c)
+    public CardSide( CardData card, int value, int colour)
     {
-        value = v;
-        colour = c;
+        this.card = card;
+        this.value = value;
+        this.colour = colour;
     }
 
     public int value;
     public int colour;
+    public CardData card;
 }
 
 [Serializable]
@@ -21,7 +23,6 @@ public enum Side
     Right,
     Down,
     Left,
-    NumSides,
 }
 
 [Serializable]
