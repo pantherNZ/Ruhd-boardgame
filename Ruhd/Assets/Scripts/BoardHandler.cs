@@ -1,13 +1,122 @@
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class BoardHandler : MonoBehaviour
+public class BoardHandler : EventReceiverInstance
 {
-    const int oneSideExtraScore = 1;
-    const int patternExtraScore = 2;
+    [SerializeField] GameConstants constants;
+    [SerializeField] RectTransform grid;
+    [SerializeField] DeckHandler deck;
+    [SerializeField] Vector2 cellSize;
+    [SerializeField] Vector2 padding;
+    [SerializeField] Image highlightTilePrefab;
     Dictionary<Vector2Int, CardComponent> board;
-    
+    Dictionary<Vector2Int, Image> highlights;
+    Vector2Int boardSize;
+
+    protected override void Start()
+    {
+        base.Start();
+
+        boardSize = new Vector2Int(
+            Mathf.FloorToInt( grid.rect.width / cellSize.x ),
+            Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
+        Reset();
+    }
+
+    private void Reset()
+    {
+        board = new Dictionary<Vector2Int, CardComponent>();
+        PlaceTile( new Vector2Int( 0, 1 ), deck.DrawCard( true ) );
+        PlaceTile( new Vector2Int( 0, 0 ), deck.DrawCard( true ) );
+        PlaceTile( new Vector2Int( 1, 0 ), deck.DrawCard( true ) );
+    }
+
+    public bool PlaceTile( Vector2Int pos, CardComponent tile )
+    {
+        if( board.ContainsKey( pos ) )
+            return false;
+
+        tile.transform.SetParent( grid );
+        tile.transform.localPosition = GetGridPosition( pos );
+        board.Add( pos, tile );
+        return true;
+    }
+
+    public Vector2 GetGridPosition( Vector2Int pos )
+    {
+        return new Vector2(
+            pos.x * ( cellSize.x + padding.x ),
+            pos.y * ( cellSize.y + padding.y ) );
+    }
+
+    public bool ResetTile( Vector2Int pos )
+    {
+        if( board.TryGetValue( pos, out var tile ) )
+        {
+            tile.DestroyObject();
+            return true;
+        }
+        return false;
+    }
+
+    void HighlightAvailableSpot( Vector2Int pos )
+    {
+        if( pos.x >= boardSize.x / 2 ||
+            pos.y >= boardSize.y / 2 ||
+            pos.x < -boardSize.x / 2 ||
+            pos.y < -boardSize.y / 2 )
+            return;
+        if( highlights.ContainsKey( pos ) )
+            return;
+        if( board.ContainsKey( pos ) )
+            return;
+
+        var highlight = Instantiate( highlightTilePrefab );
+        highlight.transform.SetParent( grid );
+        highlight.transform.localPosition = GetGridPosition( pos );
+        highlights.Add( pos, highlight );
+    }
+
+    public void HighlightAvailableSpots()
+    {
+        if( highlights != null )
+            return;
+
+        highlights = new Dictionary<Vector2Int, Image>();
+
+        foreach( var( pos, _ ) in board )
+        {
+            HighlightAvailableSpot( pos + new Vector2Int( 0, 1 ) );
+            HighlightAvailableSpot( pos + new Vector2Int( 1, 0 ) );
+            HighlightAvailableSpot( pos + new Vector2Int( 0, -1) );
+            HighlightAvailableSpot( pos + new Vector2Int( -1, 0 ) );
+        }
+    }
+
+    public void RemoveHighlights()
+    {
+        if( highlights == null )
+            return;
+
+        foreach( var( _, highlight ) in highlights )
+            highlight.DestroyObject();
+        highlights = null;
+    }
+
+    public override void OnEventReceived( IBaseEvent e )
+    {
+        if( e is TileSelectedEvent tileSelectedEvent )
+        {
+            HighlightAvailableSpots();
+        }
+        else if( e is TilePlacedEvent tilePlacedEvent )
+        {
+            RemoveHighlights();
+        }
+    }
+
     public int EvaluateScore( Vector2Int pos, CardComponent newCard )
     {
         if( newCard != null )
@@ -70,7 +179,7 @@ public class BoardHandler : MonoBehaviour
     int ScoreOneSideRule( Vector2Int pos )
     {
         int sides = Utility.GetEnumValues<Side>().Sum( side => GetAdjacentSide( pos, side ) != null ? 1 : 0 );
-        return sides == 1 ? oneSideExtraScore : 0;
+        return sides == 1 ? constants.oneSideExtraScore : 0;
     }
 
     int ScoreDiffRuleSide( Vector2Int pos, Side direction )
@@ -108,7 +217,7 @@ public class BoardHandler : MonoBehaviour
             (
                 ( curLeft.Value.colour == nextLeft.Value.colour && curLeft.Value.colour == nextNextLeft.Value.colour ) ||
                 ( curLeft.Value.value == nextLeft.Value.value && curLeft.Value.value == nextNextLeft.Value.value )
-            ) ? patternExtraScore : 0;
+            ) ? constants.patternExtraScore : 0;
     }
 
     int ScorePatternRule( Vector2Int pos )

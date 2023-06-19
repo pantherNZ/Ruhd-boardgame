@@ -1,24 +1,43 @@
 ﻿using UnityEditor;
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 public class DataHandler : MonoBehaviour
 {
     const string numbersDataPath = "Data/Numbers";
     const string coloursDataPath = "Data/Colours";
+    const string imagesDataPath = "Data/Images";
     const string tilesImportPath = "Assets/Resources/Tiles";
+
+    static List<CardData> cachedCards;
+
+    public static List<CardData> GetAllCards()
+    {
+        if( cachedCards == null )
+        {
+            var cards = Resources.LoadAll<CardData>( "Tiles" );
+            cachedCards = cards.ToList();
+        }
+        return cachedCards;
+    }
 
     [MenuItem( "Ruhd/Import Tiles" )]
     static void ImportTiles()
     {
         var numbers = Resources.Load<TextAsset>( numbersDataPath );
         var colours = Resources.Load<TextAsset>( coloursDataPath );
+        var images = Resources.Load<TextAsset>( imagesDataPath );
         int idx = 0;
+        var zippedData = Utility.Zip( numbers.text.Split( '\n' ), colours.text.Split( '\n' ), images.text.Split( '\n' ) );
 
-        foreach( var( number, colour ) in Utility.Zip( numbers.text.Split('\n'), colours.text.Split( '\n' ) ) )
+        foreach( var( number, colour, image ) in zippedData )
         {
             var cardNumbers = number.Split( ',' );
             var cardColours = colour.Split( ',' );
             var newCard = ScriptableObject.CreateInstance<CardData>();
+            newCard.imagePath = image.Trim();
 
             for( int i = 0; i < Utility.GetNumEnumValues<Side>(); ++i )
             {

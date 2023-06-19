@@ -15,9 +15,14 @@ MonoBehaviour:
   sides:
   - value: 3
     colour: 4
+    card: {fileID: 11400000}
   - value: 1
     colour: 4
+    card: {fileID: 11400000}
   - value: 3
     colour: 3
+    card: {fileID: 11400000}
   - value: 2
     colour: 1
+    card: {fileID: 11400000}
+  imagePath: Textures/Tiles/38 - Unnamed (Front)

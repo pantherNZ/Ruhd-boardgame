@@ -30,4 +30,5 @@ public class CardData : ScriptableObject
 {
     // Clockwise ordering
     public CardSide[] sides = new CardSide[4];
+    public string imagePath;
 }
