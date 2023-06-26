@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04f29ee98b6a58145964b7be69d48677, type: 3}
   m_Name: GameConstants
   m_EditorClassIdentifier: 
-  numStartingCards: 5
+  rngSeed: 1
+  deckNumStartingCards: 4
+  oneSideExtraScore: 1
+  patternExtraScore: 2

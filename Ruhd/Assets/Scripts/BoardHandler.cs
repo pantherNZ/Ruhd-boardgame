@@ -31,24 +31,57 @@ public class BoardHandler : EventReceiverInstance
         PlaceTile( new Vector2Int( 0, 1 ), deck.DrawCard( true ) );
         PlaceTile( new Vector2Int( 0, 0 ), deck.DrawCard( true ) );
         PlaceTile( new Vector2Int( 1, 0 ), deck.DrawCard( true ) );
+        PlaceTile( new Vector2Int( 1, 1 ), deck.DrawCard( true ) );
     }
 
-    public bool PlaceTile( Vector2Int pos, CardComponent tile )
+    private bool TryPlaceTile( int playerIdx, CardComponent tile )
     {
-        if( board.ContainsKey( pos ) )
-            return false;
+        var gridPos = GetGridPosition( grid.worldToLocalMatrix.MultiplyPoint( tile.transform.position ) );
+        bool validPlacement = IsAvailableSpot( gridPos );
 
-        tile.transform.SetParent( grid );
-        tile.transform.localPosition = GetGridPosition( pos );
-        board.Add( pos, tile );
-        return true;
+        EventSystem.Instance.TriggerEvent( new TilePlacedEvent()
+        {
+            card = tile,
+            wasPlacedOnBoard = validPlacement
+        } );
+
+        if( validPlacement )
+        {
+            PlaceTile( gridPos, tile );
+            int gainedScore = EvaluateScore( gridPos, null );
+
+            EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
+            {
+                playerIdx = playerIdx,
+                scoreModifier = gainedScore,
+            } );
+        }
+
+        return validPlacement;
     }
 
-    public Vector2 GetGridPosition( Vector2Int pos )
+    private void PlaceTile( Vector2Int pos, CardComponent tile )
+    {
+        tile.transform.SetParent( grid );
+        tile.transform.localPosition = GetPositionOnGrid( pos );
+        tile.GetComponent<Draggable>().enabled = false;
+        tile.GetComponent<EventDispatcherV2>().enabled = false;
+        board.Add( pos, tile );
+    }
+
+    public Vector2 GetPositionOnGrid( Vector2Int pos )
     {
         return new Vector2(
             pos.x * ( cellSize.x + padding.x ),
-            pos.y * ( cellSize.y + padding.y ) );
+            pos.y * ( cellSize.y + padding.y ) ) - cellSize / 2.0f;
+    }
+
+    public Vector2Int GetGridPosition( Vector2 pos )
+    {
+        pos += cellSize / 2.0f;
+        return new Vector2Int(
+            Mathf.RoundToInt( pos.x / ( cellSize.x + padding.x ) ),
+            Mathf.RoundToInt( pos.y / ( cellSize.y + padding.y ) ) );
     }
 
     public bool ResetTile( Vector2Int pos )
@@ -61,21 +94,32 @@ public class BoardHandler : EventReceiverInstance
         return false;
     }
 
-    void HighlightAvailableSpot( Vector2Int pos )
+    private bool IsAvailableSpot( Vector2Int pos )
     {
         if( pos.x >= boardSize.x / 2 ||
             pos.y >= boardSize.y / 2 ||
             pos.x < -boardSize.x / 2 ||
             pos.y < -boardSize.y / 2 )
-            return;
+            return false;
+        if( board.ContainsKey( pos ) )
+            return false;
+        return board.ContainsKey( pos + new Vector2Int( 1, 0 ) ) ||
+               board.ContainsKey( pos + new Vector2Int( -1, 0 ) ) ||
+               board.ContainsKey( pos + new Vector2Int( 0, 1 ) ) ||
+               board.ContainsKey( pos + new Vector2Int( 0, -1 ) );
+    }
+
+    private void HighlightAvailableSpot( Vector2Int pos )
+    {
         if( highlights.ContainsKey( pos ) )
             return;
-        if( board.ContainsKey( pos ) )
+
+        if( !IsAvailableSpot( pos ) )
             return;
 
         var highlight = Instantiate( highlightTilePrefab );
         highlight.transform.SetParent( grid );
-        highlight.transform.localPosition = GetGridPosition( pos );
+        highlight.transform.localPosition = GetPositionOnGrid( pos );
         highlights.Add( pos, highlight );
     }
 
@@ -86,12 +130,12 @@ public class BoardHandler : EventReceiverInstance
 
         highlights = new Dictionary<Vector2Int, Image>();
 
-        foreach( var( pos, _ ) in board )
+        foreach( var (pos, _) in board )
         {
-            HighlightAvailableSpot( pos + new Vector2Int( 0, 1 ) );
             HighlightAvailableSpot( pos + new Vector2Int( 1, 0 ) );
-            HighlightAvailableSpot( pos + new Vector2Int( 0, -1) );
             HighlightAvailableSpot( pos + new Vector2Int( -1, 0 ) );
+            HighlightAvailableSpot( pos + new Vector2Int( 0, 1 ) );
+            HighlightAvailableSpot( pos + new Vector2Int( 0, -1 ) );
         }
     }
 
@@ -100,7 +144,7 @@ public class BoardHandler : EventReceiverInstance
         if( highlights == null )
             return;
 
-        foreach( var( _, highlight ) in highlights )
+        foreach( var (_, highlight) in highlights )
             highlight.DestroyObject();
         highlights = null;
     }
@@ -111,8 +155,9 @@ public class BoardHandler : EventReceiverInstance
         {
             HighlightAvailableSpots();
         }
-        else if( e is TilePlacedEvent tilePlacedEvent )
+        else if( e is TileDroppedEvent tilePlacedEvent )
         {
+            TryPlaceTile( 0, tilePlacedEvent.card );
             RemoveHighlights();
         }
     }
@@ -133,7 +178,7 @@ public class BoardHandler : EventReceiverInstance
         return score;
     }
 
-    CardSide? GetCurrentSide( Vector2Int pos, Side direction )
+    private CardSide? GetCurrentSide( Vector2Int pos, Side direction )
     {
         return direction switch
         {
@@ -145,7 +190,7 @@ public class BoardHandler : EventReceiverInstance
         };
     }
 
-    CardSide? GetAdjacentSide( Vector2Int pos, Side direction )
+    private CardSide? GetAdjacentSide( Vector2Int pos, Side direction )
     {
         switch( direction )
         {
@@ -163,26 +208,26 @@ public class BoardHandler : EventReceiverInstance
                 break;
             case Side.Left:
                 if( board.TryGetValue( pos + new Vector2Int( -1, 0 ), out value ) )
-                    return value.data.sides[( int )value.rotation + ( int )value.rotation % 2 == 0 ? 1 : -1];
+                    return value.data.sides[( int )value.rotation + ( ( int )value.rotation % 2 == 0 ? 1 : -1 )];
                 break;
         }
 
         return null;
     }
 
-    void GetOpposingCardSides( Vector2Int pos, Side direction, out CardSide? side, out CardSide? other )
+    private void GetOpposingCardSides( Vector2Int pos, Side direction, out CardSide? side, out CardSide? other )
     {
-        side = GetAdjacentSide( pos, direction );
-        other = GetCurrentSide( pos, direction );
+        side = GetCurrentSide( pos, direction );
+        other = GetAdjacentSide( pos, direction );
     }
 
-    int ScoreOneSideRule( Vector2Int pos )
+    private int ScoreOneSideRule( Vector2Int pos )
     {
         int sides = Utility.GetEnumValues<Side>().Sum( side => GetAdjacentSide( pos, side ) != null ? 1 : 0 );
         return sides == 1 ? constants.oneSideExtraScore : 0;
     }
 
-    int ScoreDiffRuleSide( Vector2Int pos, Side direction )
+    private int ScoreDiffRuleSide( Vector2Int pos, Side direction )
     {
         GetOpposingCardSides( pos, direction, out var side, out var other );
         if( other != null && side.Value.colour != other.Value.colour )
@@ -190,12 +235,12 @@ public class BoardHandler : EventReceiverInstance
         return 0;
     }
 
-    int ScoreDiffRule( Vector2Int pos )
+    private int ScoreDiffRule( Vector2Int pos )
     {
         return Utility.GetEnumValues<Side>().Sum( side => ScoreDiffRuleSide( pos, side ) );
     }
 
-    int ScoreSameRuleSide( Vector2Int pos, Side direction )
+    private int ScoreSameRuleSide( Vector2Int pos, Side direction )
     {
         GetOpposingCardSides( pos, direction, out var side, out var other );
         if( other != null && side.Value.colour == other.Value.colour && side.Value.value == other.Value.value )
@@ -203,16 +248,16 @@ public class BoardHandler : EventReceiverInstance
         return 0;
     }
 
-    int ScoreSameRule( Vector2Int pos )
+    private int ScoreSameRule( Vector2Int pos )
     {
         return Utility.GetEnumValues<Side>().Sum( side => ScoreSameRuleSide( pos, side ) );
     }
 
-    int ScorePatternRuleSide( Vector2Int pos, Side direction, bool positive )
+    private int ScorePatternRuleSide( Vector2Int pos, Side side, Vector2Int direction )
     {
-        var curLeft = GetCurrentSide( pos, direction );
-        var nextLeft = GetCurrentSide( pos + new Vector2Int( positive ? 1 : -1, 0 ), direction );
-        var nextNextLeft = GetCurrentSide( pos + new Vector2Int( positive ? 2 : -2, 0 ), direction );
+        var curLeft = GetCurrentSide( pos, side );
+        var nextLeft = GetCurrentSide( pos + direction, side );
+        var nextNextLeft = GetCurrentSide( pos + direction * 2, side );
         return curLeft.HasValue && nextLeft.HasValue && nextNextLeft.HasValue &&
             (
                 ( curLeft.Value.colour == nextLeft.Value.colour && curLeft.Value.colour == nextNextLeft.Value.colour ) ||
@@ -220,10 +265,16 @@ public class BoardHandler : EventReceiverInstance
             ) ? constants.patternExtraScore : 0;
     }
 
-    int ScorePatternRule( Vector2Int pos )
+    private int ScorePatternRule( Vector2Int pos )
     {
-        return Utility.GetEnumValues<Side>().Sum( side => 
-            ScorePatternRuleSide( pos, side, true ) + 
-            ScorePatternRuleSide( pos, side, false ) );
+        return Utility.GetEnumValues<Side>().Sum( side =>
+            Mathf.Max(
+                ScorePatternRuleSide( pos, side, new Vector2Int( 1, 0 ) ),
+                ScorePatternRuleSide( pos, side, new Vector2Int( -1, 0 ) )
+            ) +
+            Mathf.Max(
+                ScorePatternRuleSide( pos, side, new Vector2Int( 0, 1 ) ),
+                ScorePatternRuleSide( pos, side, new Vector2Int( 0, -1 ) )
+            ) );
     }
 }

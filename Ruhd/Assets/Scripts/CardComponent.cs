@@ -19,7 +19,6 @@ public class CardComponent : MonoBehaviour
 
     private void Start()
     {
-        GetComponent<Draggable>().onDragEnd += ( obj, pos ) => false;
     }
 
     public void OnDragStart()
@@ -29,6 +28,6 @@ public class CardComponent : MonoBehaviour
 
     public void OnDragEnd()
     {
-        EventSystem.Instance.TriggerEvent( new TilePlacedEvent() { card = this } );
+        EventSystem.Instance.TriggerEvent( new TileDroppedEvent() { card = this } );
     }
 }

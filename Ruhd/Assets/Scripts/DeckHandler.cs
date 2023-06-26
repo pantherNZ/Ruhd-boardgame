@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DeckHandler : MonoBehaviour
+public class DeckHandler : EventReceiverInstance
 {
     [SerializeField] GameConstants constants;
     [SerializeField] HorizontalLayoutGroup slotsPanelUI;
     [SerializeField] CardComponent tilePrefab;
     private List<CardComponent> slots;
     private List<CardData> allCards;
+    private int selectedCardFromSlot;
 
-    void Start()
+    protected override void Start()
     {
-        slots = new List<CardComponent>();
+        base.Start();
+
+        if( constants.rngSeed != 0 )
+            Random.InitState( constants.rngSeed );
+
+       slots = new List<CardComponent>();
         allCards = new List<CardData>();
         foreach( var card in DataHandler.GetAllCards() )
             allCards.Add( Instantiate( card ) );
@@ -45,5 +51,28 @@ public class DeckHandler : MonoBehaviour
             newCard.rotation = Utility.GetEnumValues<Side>().RandomItem();
 
         return newCard;
+    }
+
+    public override void OnEventReceived( IBaseEvent e )
+    {
+        if( e is TileSelectedEvent tileSelectedEvent )
+        {
+            foreach( var( idx, card ) in slots.Enumerate() )
+            {
+                if( tileSelectedEvent.card == card )
+                {
+                    selectedCardFromSlot = idx + 1; // + 1 to account for the placeholder deck card
+                    break;
+                }
+            }
+        }
+        else if( e is TilePlacedEvent tilePlaced )
+        {
+            if( !tilePlaced.wasPlacedOnBoard )
+            {
+                tilePlaced.card.transform.SetSiblingIndex( selectedCardFromSlot );
+                LayoutRebuilder.ForceRebuildLayoutImmediate( slotsPanelUI.transform as RectTransform );
+            }
+        }
     }
 }
