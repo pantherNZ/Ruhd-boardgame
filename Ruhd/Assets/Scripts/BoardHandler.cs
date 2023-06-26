@@ -13,13 +13,13 @@ public class BoardHandler : EventReceiverInstance
     [SerializeField] Image highlightTilePrefab;
     Dictionary<Vector2Int, CardComponent> board;
     Dictionary<Vector2Int, Image> highlights;
-    Vector2Int boardSize;
+    int boardSize;
 
     protected override void Start()
     {
         base.Start();
 
-        boardSize = new Vector2Int(
+        boardSize = Mathf.Min(
             Mathf.FloorToInt( grid.rect.width / cellSize.x ),
             Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
         Reset();
@@ -96,10 +96,10 @@ public class BoardHandler : EventReceiverInstance
 
     private bool IsAvailableSpot( Vector2Int pos )
     {
-        if( pos.x >= boardSize.x / 2 ||
-            pos.y >= boardSize.y / 2 ||
-            pos.x < -boardSize.x / 2 ||
-            pos.y < -boardSize.y / 2 )
+        if( pos.x > boardSize / 2 ||
+            pos.y > boardSize / 2 ||
+            pos.x <= -boardSize / 2 ||
+            pos.y <= -boardSize / 2 )
             return false;
         if( board.ContainsKey( pos ) )
             return false;
@@ -180,39 +180,22 @@ public class BoardHandler : EventReceiverInstance
 
     private CardSide? GetCurrentSide( Vector2Int pos, Side direction )
     {
-        return direction switch
-        {
-            Side.Up => GetAdjacentSide( pos + new Vector2Int( 0, 1 ), Side.Down ),
-            Side.Right => GetAdjacentSide( pos + new Vector2Int( 1, 0 ), Side.Left ),
-            Side.Down => GetAdjacentSide( pos + new Vector2Int( 0, -1 ), Side.Up ),
-            Side.Left => GetAdjacentSide( pos + new Vector2Int( -1, 0 ), Side.Right ),
-            _ => null,
-        };
+        if( !board.TryGetValue( pos, out var value ) )
+            return null;
+
+        return value.data.sides[Utility.Mod( ( int )direction - ( int )value.rotation, Utility.GetNumEnumValues<Side>() )];
     }
 
     private CardSide? GetAdjacentSide( Vector2Int pos, Side direction )
     {
-        switch( direction )
+        return direction switch
         {
-            case Side.Up:
-                if( board.TryGetValue( pos + new Vector2Int( 0, 1 ), out var value ) )
-                    return value.data.sides[( int )value.rotation % 2 == 0 ? 2 - ( int )value.rotation : ( int )value.rotation];
-                break;
-            case Side.Right:
-                if( board.TryGetValue( pos + new Vector2Int( 1, 0 ), out value ) )
-                    return value.data.sides[3 - ( int )value.rotation];
-                break;
-            case Side.Down:
-                if( board.TryGetValue( pos + new Vector2Int( 0, -1 ), out value ) )
-                    return value.data.sides[( int )value.rotation];
-                break;
-            case Side.Left:
-                if( board.TryGetValue( pos + new Vector2Int( -1, 0 ), out value ) )
-                    return value.data.sides[( int )value.rotation + ( ( int )value.rotation % 2 == 0 ? 1 : -1 )];
-                break;
-        }
-
-        return null;
+            Side.Up => GetCurrentSide( pos + new Vector2Int( 0, 1 ), Side.Down ),
+            Side.Right => GetCurrentSide( pos + new Vector2Int( 1, 0 ), Side.Left ),
+            Side.Down => GetCurrentSide( pos + new Vector2Int( 0, -1 ), Side.Up ),
+            Side.Left => GetCurrentSide( pos + new Vector2Int( -1, 0 ), Side.Right ),
+            _ => null,
+        };
     }
 
     private void GetOpposingCardSides( Vector2Int pos, Side direction, out CardSide? side, out CardSide? other )

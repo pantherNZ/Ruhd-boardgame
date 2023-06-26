@@ -4,22 +4,18 @@ using UnityEngine;
 [Serializable]
 public class CardComponent : MonoBehaviour
 {
-    private Side _rotation;
+    [SerializeField] private Side _rotation;
     public Side rotation
     {
         get => _rotation;
         set
         {
-            ( transform as RectTransform ).localEulerAngles = new Vector3( 0.0f, 0.0f, ( float )_rotation * 90.0f );
             _rotation = value;
+            ( transform as RectTransform ).localEulerAngles = new Vector3( 0.0f, 0.0f, ( float )_rotation * 90.0f );
         }
     }
 
-    [HideInInspector] public CardData data;
-
-    private void Start()
-    {
-    }
+    public CardData data;
 
     public void OnDragStart()
     {

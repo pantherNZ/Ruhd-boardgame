@@ -10,7 +10,7 @@ public class DeckHandler : EventReceiverInstance
     [SerializeField] CardComponent tilePrefab;
     private List<CardComponent> slots;
     private List<CardData> allCards;
-    private int selectedCardFromSlot;
+    private int? selectedCardFromSlot;
 
     protected override void Start()
     {
@@ -26,16 +26,17 @@ public class DeckHandler : EventReceiverInstance
         allCards.RandomShuffle();
 
         for( int i = 0; i < constants.deckNumStartingCards; ++i )
-        {
-            var newCard = DrawCard( true );
-            slots.Add( newCard );
-            newCard.transform.SetParent( slotsPanelUI.transform );
-        }
+            DrawCardToOpenHand();
     }
 
-    public bool DeckEmpty()
+    public bool IsDeckEmpty()
     {
         return allCards.IsEmpty();
+    }
+
+    public bool IsOpenHandEmpty()
+    {
+        return slots.IsEmpty();
     }
 
     public CardComponent DrawCard( bool randomRotation )
@@ -47,10 +48,17 @@ public class DeckHandler : EventReceiverInstance
         var sprite = Resources.Load<Sprite>( cardData.imagePath );
         newCard.GetComponent<Image>().sprite = Instantiate( sprite );
 
-        if( randomRotation )
-            newCard.rotation = Utility.GetEnumValues<Side>().RandomItem();
+        //if( randomRotation )
+         //   newCard.rotation = Utility.GetEnumValues<Side>().RandomItem();
 
         return newCard;
+    }
+
+    public void DrawCardToOpenHand()
+    {
+        var newCard = DrawCard( true );
+        slots.Add( newCard );
+        newCard.transform.SetParent( slotsPanelUI.transform );
     }
 
     public override void OnEventReceived( IBaseEvent e )
@@ -61,7 +69,7 @@ public class DeckHandler : EventReceiverInstance
             {
                 if( tileSelectedEvent.card == card )
                 {
-                    selectedCardFromSlot = idx + 1; // + 1 to account for the placeholder deck card
+                    selectedCardFromSlot = idx;
                     break;
                 }
             }
@@ -70,9 +78,24 @@ public class DeckHandler : EventReceiverInstance
         {
             if( !tilePlaced.wasPlacedOnBoard )
             {
-                tilePlaced.card.transform.SetSiblingIndex( selectedCardFromSlot );
+                // + 1 to account for the placeholder deck card
+                tilePlaced.card.transform.SetSiblingIndex( selectedCardFromSlot.Value + 1 );
                 LayoutRebuilder.ForceRebuildLayoutImmediate( slotsPanelUI.transform as RectTransform );
             }
+            else
+            {
+                // Successfully placed
+                slots.RemoveAt( selectedCardFromSlot.Value );
+
+                //If deck is empty then we need to draw more tiles
+                if( IsOpenHandEmpty() )
+                {
+                    for( int i = 0; i < constants.deckNumStartingCards; ++i )
+                        DrawCardToOpenHand();
+                }
+            }
+
+            selectedCardFromSlot = null;
         }
     }
 }
