@@ -16,13 +16,13 @@ MonoBehaviour:
   - value: 2
     colour: 3
     card: {fileID: 11400000}
-  - value: 3
-    colour: 1
-    card: {fileID: 11400000}
   - value: 4
+    colour: 4
+    card: {fileID: 11400000}
+  - value: 3
     colour: 3
     card: {fileID: 11400000}
   - value: 2
-    colour: 4
+    colour: 1
     card: {fileID: 11400000}
   imagePath: Textures/Tiles/33 - Unnamed (Front)

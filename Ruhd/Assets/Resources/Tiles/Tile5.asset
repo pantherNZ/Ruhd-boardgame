@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: Tile5
   m_EditorClassIdentifier: 
   sides:
-  - value: 2
+  - value: 1
     colour: 1
     card: {fileID: 11400000}
   - value: 4
-    colour: 1
+    colour: 3
     card: {fileID: 11400000}
   - value: 4
     colour: 4
     card: {fileID: 11400000}
-  - value: 1
-    colour: 3
+  - value: 2
+    colour: 1
     card: {fileID: 11400000}
   imagePath: Textures/Tiles/5 - Unnamed (Front)
