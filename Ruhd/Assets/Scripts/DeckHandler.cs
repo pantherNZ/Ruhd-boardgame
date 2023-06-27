@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -48,8 +47,8 @@ public class DeckHandler : EventReceiverInstance
         var sprite = Resources.Load<Sprite>( cardData.imagePath );
         newCard.GetComponent<Image>().sprite = Instantiate( sprite );
 
-        //if( randomRotation )
-         //   newCard.rotation = Utility.GetEnumValues<Side>().RandomItem();
+        if( randomRotation )
+            newCard.rotation = Utility.GetEnumValues<Side>().RandomItem();
 
         return newCard;
     }

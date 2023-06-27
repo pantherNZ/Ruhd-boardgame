@@ -15,6 +15,14 @@ public class BoardHandler : EventReceiverInstance
     Dictionary<Vector2Int, Image> highlights;
     int boardSize;
 
+    static readonly Vector2Int[] directions = new Vector2Int[]
+    {
+        new Vector2Int( 0, 1 ),
+        new Vector2Int( 1, 0 ),
+        new Vector2Int( 0, -1 ),
+        new Vector2Int( -1, 0 ),
+    };
+
     protected override void Start()
     {
         base.Start();
@@ -103,10 +111,7 @@ public class BoardHandler : EventReceiverInstance
             return false;
         if( board.ContainsKey( pos ) )
             return false;
-        return board.ContainsKey( pos + new Vector2Int( 1, 0 ) ) ||
-               board.ContainsKey( pos + new Vector2Int( -1, 0 ) ) ||
-               board.ContainsKey( pos + new Vector2Int( 0, 1 ) ) ||
-               board.ContainsKey( pos + new Vector2Int( 0, -1 ) );
+        return directions.Any( x => board.ContainsKey( pos + x ) );
     }
 
     private void HighlightAvailableSpot( Vector2Int pos )
@@ -131,12 +136,8 @@ public class BoardHandler : EventReceiverInstance
         highlights = new Dictionary<Vector2Int, Image>();
 
         foreach( var (pos, _) in board )
-        {
-            HighlightAvailableSpot( pos + new Vector2Int( 1, 0 ) );
-            HighlightAvailableSpot( pos + new Vector2Int( -1, 0 ) );
-            HighlightAvailableSpot( pos + new Vector2Int( 0, 1 ) );
-            HighlightAvailableSpot( pos + new Vector2Int( 0, -1 ) );
-        }
+            foreach( var direction in directions )
+                HighlightAvailableSpot( pos + direction );
     }
 
     public void RemoveHighlights()
@@ -171,6 +172,11 @@ public class BoardHandler : EventReceiverInstance
             ScoreDiffRule( pos ) +
             ScoreSameRule( pos ) +
             ScorePatternRule( pos );
+        Debug.Log( "Score: " + score + 
+            "\n    - Diff colour: " + ScoreDiffRule( pos ) +
+            "\n    - Extra from one side: " + ScoreOneSideRule( pos ) +
+            "\n    - Same colour: " + ScoreSameRule( pos ) +
+            "\n    - Pattern: " + ScorePatternRule( pos ) );
 
         if( newCard != null )
             board.Remove( pos );
@@ -188,14 +194,7 @@ public class BoardHandler : EventReceiverInstance
 
     private CardSide? GetAdjacentSide( Vector2Int pos, Side direction )
     {
-        return direction switch
-        {
-            Side.Up => GetCurrentSide( pos + new Vector2Int( 0, 1 ), Side.Down ),
-            Side.Right => GetCurrentSide( pos + new Vector2Int( 1, 0 ), Side.Left ),
-            Side.Down => GetCurrentSide( pos + new Vector2Int( 0, -1 ), Side.Up ),
-            Side.Left => GetCurrentSide( pos + new Vector2Int( -1, 0 ), Side.Right ),
-            _ => null,
-        };
+        return GetCurrentSide( pos + directions[( int )direction], ( Side )Utility.Mod( ( int )direction + 2, 4 ) );
     }
 
     private void GetOpposingCardSides( Vector2Int pos, Side direction, out CardSide? side, out CardSide? other )
@@ -252,12 +251,12 @@ public class BoardHandler : EventReceiverInstance
     {
         return Utility.GetEnumValues<Side>().Sum( side =>
             Mathf.Max(
-                ScorePatternRuleSide( pos, side, new Vector2Int( 1, 0 ) ),
-                ScorePatternRuleSide( pos, side, new Vector2Int( -1, 0 ) )
+                ScorePatternRuleSide( pos, side, directions[( int )Side.Up]),
+                ScorePatternRuleSide( pos, side, directions[( int )Side.Down] )
             ) +
             Mathf.Max(
-                ScorePatternRuleSide( pos, side, new Vector2Int( 0, 1 ) ),
-                ScorePatternRuleSide( pos, side, new Vector2Int( 0, -1 ) )
+                ScorePatternRuleSide( pos, side, directions[( int )Side.Right] ),
+                ScorePatternRuleSide( pos, side, directions[( int )Side.Left] )
             ) );
     }
 }
