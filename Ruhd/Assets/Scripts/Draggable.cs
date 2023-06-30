@@ -46,6 +46,11 @@ public class Draggable : MonoBehaviour
         transform.anchoredPosition = startPos;
     }
 
+    public Vector2 GetDragStartPosition()
+    {
+        return startPos;
+    }
+
     public bool IsDragging()
     {
         return dragging;

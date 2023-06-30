@@ -11,9 +11,12 @@ public class BoardHandler : EventReceiverInstance
     [SerializeField] Vector2 cellSize;
     [SerializeField] Vector2 padding;
     [SerializeField] Image highlightTilePrefab;
-    Dictionary<Vector2Int, CardComponent> board;
+    Dictionary<Vector2Int, TileComponent> board;
+    Dictionary<Vector2Int, TileComponent> flipped;
     Dictionary<Vector2Int, Image> highlights;
     int boardSize;
+    bool placementAction = true; // False means flip tile action
+    Vector2Int? lastPlaced;
 
     static readonly Vector2Int[] directions = new Vector2Int[]
     {
@@ -35,46 +38,112 @@ public class BoardHandler : EventReceiverInstance
 
     private void Reset()
     {
-        board = new Dictionary<Vector2Int, CardComponent>();
-        PlaceTile( new Vector2Int( 0, 1 ), deck.DrawCard( true ) );
-        PlaceTile( new Vector2Int( 0, 0 ), deck.DrawCard( true ) );
-        PlaceTile( new Vector2Int( 1, 0 ), deck.DrawCard( true ) );
-        PlaceTile( new Vector2Int( 1, 1 ), deck.DrawCard( true ) );
+        board = new Dictionary<Vector2Int, TileComponent>();
+        flipped = new Dictionary<Vector2Int, TileComponent>();
+        PlaceTile( new Vector2Int( 0, 1 ), deck.DrawTile( true ) );
+        PlaceTile( new Vector2Int( 0, 0 ), deck.DrawTile( true ) );
+        PlaceTile( new Vector2Int( 1, 0 ), deck.DrawTile( true ) );
+        PlaceTile( new Vector2Int( 1, 1 ), deck.DrawTile( true ) );
     }
 
-    private bool TryPlaceTile( int playerIdx, CardComponent tile )
+    private bool TryPlaceTile( int playerIdx, TileComponent tile )
     {
         var gridPos = GetGridPosition( grid.worldToLocalMatrix.MultiplyPoint( tile.transform.position ) );
         bool validPlacement = IsAvailableSpot( gridPos );
 
         EventSystem.Instance.TriggerEvent( new TilePlacedEvent()
         {
-            card = tile,
-            wasPlacedOnBoard = validPlacement
+            tile = tile,
+            successfullyPlaced = validPlacement,
         } );
 
+        // Flipped tile failed to place, return it to where it was on the board before
+        if( tile.flipped )
+        {
+            var found = flipped.First( v => tile == v.Value );
+
+            if( validPlacement )
+            {
+                tile.ShowFront( true );
+                flipped.Remove( found.Key );
+            }
+            else
+            {
+                tile.ShowBack();
+                AddToGrid( found.Key, tile );
+            }
+        }
+        
+        // Valid placement
         if( validPlacement )
         {
             PlaceTile( gridPos, tile );
             int gainedScore = EvaluateScore( gridPos, null );
 
-            EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
+            if( gainedScore > 0 )
             {
-                playerIdx = playerIdx,
-                scoreModifier = gainedScore,
-            } );
+                EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
+                {
+                    playerIdx = playerIdx,
+                    scoreModifier = gainedScore,
+                } );
+            }
+
+            NextTurnStage();
         }
 
+        lastPlaced = gridPos;
         return validPlacement;
     }
 
-    private void PlaceTile( Vector2Int pos, CardComponent tile )
+    private void NextTurnStage()
+    {
+        placementAction = !placementAction;
+
+        foreach( var tile in flipped.Values )
+            tile.SetInteractable( placementAction );
+    }
+
+    private void PlaceTile( Vector2Int pos, TileComponent tile )
+    {
+        AddToGrid( pos, tile );
+        tile.SetInteractable( false );
+
+        if( placementAction )
+        {
+            board.Add( pos, tile );
+        }
+        else
+        {
+            flipped.Add( pos, tile );
+            tile.ShowBack();
+            ReenablePatterns( pos );
+        }
+    }
+
+    private void AddToGrid( Vector2Int pos, TileComponent tile )
     {
         tile.transform.SetParent( grid );
         tile.transform.localPosition = GetPositionOnGrid( pos );
-        tile.GetComponent<Draggable>().enabled = false;
-        tile.GetComponent<EventDispatcherV2>().enabled = false;
-        board.Add( pos, tile );
+    }
+
+    private void ReenablePatterns( Vector2Int pos )
+    {
+        for( int i = 0; i < boardSize; ++i )
+        {
+            var curSide = GetCurrentSide( new Vector2Int( pos.x, i ), Side.Down );
+            if( curSide != null )
+                curSide.patternUsed = false;
+            curSide = GetCurrentSide( new Vector2Int( pos.x, i ), Side.Up );
+            if( curSide != null )
+                curSide.patternUsed = false;
+            curSide = GetCurrentSide( new Vector2Int( i, pos.y ), Side.Left );
+            if( curSide != null )
+                curSide.patternUsed = false;
+            curSide = GetCurrentSide( new Vector2Int( i, pos.y ), Side.Right );
+            if( curSide != null )
+                curSide.patternUsed = false;
+        }
     }
 
     public Vector2 GetPositionOnGrid( Vector2Int pos )
@@ -109,9 +178,22 @@ public class BoardHandler : EventReceiverInstance
             pos.x <= -boardSize / 2 ||
             pos.y <= -boardSize / 2 )
             return false;
-        if( board.ContainsKey( pos ) )
+
+        if( flipped.ContainsKey( pos ) )
             return false;
-        return directions.Any( x => board.ContainsKey( pos + x ) );
+
+        if( placementAction )
+        {
+            if( board.ContainsKey( pos ) )
+                return false;
+            return directions.Any( x => board.ContainsKey( pos + x ) );
+        }
+        else if( !lastPlaced.HasValue || pos != lastPlaced.Value )
+        {
+            return board.ContainsKey( pos );
+        }
+
+        return false;
     }
 
     private void HighlightAvailableSpot( Vector2Int pos )
@@ -136,8 +218,17 @@ public class BoardHandler : EventReceiverInstance
         highlights = new Dictionary<Vector2Int, Image>();
 
         foreach( var (pos, _) in board )
-            foreach( var direction in directions )
-                HighlightAvailableSpot( pos + direction );
+        {
+            if( placementAction )
+            {
+                foreach( var direction in directions )
+                    HighlightAvailableSpot( pos + direction );
+            }
+            else
+            {
+                HighlightAvailableSpot( pos );
+            }
+        }
     }
 
     public void RemoveHighlights()
@@ -152,39 +243,47 @@ public class BoardHandler : EventReceiverInstance
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is TileSelectedEvent tileSelectedEvent )
+        if( e is TileSelectedEvent tileSelected )
         {
             HighlightAvailableSpots();
+
+            if( tileSelected.tile.flipped )
+                tileSelected.tile.ShowFront( false );
         }
         else if( e is TileDroppedEvent tilePlacedEvent )
         {
-            TryPlaceTile( 0, tilePlacedEvent.card );
+            TryPlaceTile( 0, tilePlacedEvent.tile );
             RemoveHighlights();
         }
     }
 
-    public int EvaluateScore( Vector2Int pos, CardComponent newCard )
+    public int EvaluateScore( Vector2Int pos, TileComponent newCard )
     {
+        if( !placementAction )
+            return 0;
+
         if( newCard != null )
             board.Add( pos, newCard );
 
-        int score = ScoreOneSideRule( pos ) +
-            ScoreDiffRule( pos ) +
-            ScoreSameRule( pos ) +
-            ScorePatternRule( pos );
-        Debug.Log( "Score: " + score + 
-            "\n    - Diff colour: " + ScoreDiffRule( pos ) +
+        int patternScore = ScorePatternRule( pos, newCard != null );
+        int oneSideScore = ScoreOneSideRule( pos );
+        int diffScore = ScoreDiffRule( pos );
+        int sameScore = ScoreSameRule( pos );
+        int finalScore = patternScore + oneSideScore + diffScore + sameScore;
+
+        Debug.Log( "Score: " + finalScore + 
+            "\n    - Diff colour: " + diffScore +
             "\n    - Extra from one side: " + ScoreOneSideRule( pos ) +
-            "\n    - Same colour: " + ScoreSameRule( pos ) +
-            "\n    - Pattern: " + ScorePatternRule( pos ) );
+            "\n    - Same colour: " + sameScore +
+            "\n    - Pattern: " + patternScore );
 
         if( newCard != null )
             board.Remove( pos );
 
-        return score;
+        return finalScore;
     }
 
-    private CardSide? GetCurrentSide( Vector2Int pos, Side direction )
+    private TileSide GetCurrentSide( Vector2Int pos, Side direction )
     {
         if( !board.TryGetValue( pos, out var value ) )
             return null;
@@ -192,12 +291,12 @@ public class BoardHandler : EventReceiverInstance
         return value.data.sides[Utility.Mod( ( int )direction - ( int )value.rotation, Utility.GetNumEnumValues<Side>() )];
     }
 
-    private CardSide? GetAdjacentSide( Vector2Int pos, Side direction )
+    private TileSide GetAdjacentSide( Vector2Int pos, Side direction )
     {
-        return GetCurrentSide( pos + directions[( int )direction], ( Side )Utility.Mod( ( int )direction + 2, 4 ) );
+        return GetCurrentSide( pos + directions[( int )direction], direction.Opposite() );
     }
 
-    private void GetOpposingCardSides( Vector2Int pos, Side direction, out CardSide? side, out CardSide? other )
+    private void GetOpposingCardSides( Vector2Int pos, Side direction, out TileSide side, out TileSide other )
     {
         side = GetCurrentSide( pos, direction );
         other = GetAdjacentSide( pos, direction );
@@ -212,8 +311,8 @@ public class BoardHandler : EventReceiverInstance
     private int ScoreDiffRuleSide( Vector2Int pos, Side direction )
     {
         GetOpposingCardSides( pos, direction, out var side, out var other );
-        if( other != null && side.Value.colour != other.Value.colour )
-            return Mathf.Abs( side.Value.value - other.Value.value );
+        if( other != null && side.colour != other.colour )
+            return Mathf.Abs( side.value - other.value );
         return 0;
     }
 
@@ -225,8 +324,8 @@ public class BoardHandler : EventReceiverInstance
     private int ScoreSameRuleSide( Vector2Int pos, Side direction )
     {
         GetOpposingCardSides( pos, direction, out var side, out var other );
-        if( other != null && side.Value.colour == other.Value.colour && side.Value.value == other.Value.value )
-            return side.Value.value;
+        if( other != null && side.colour == other.colour && side.value == other.value )
+            return side.value;
         return 0;
     }
 
@@ -235,28 +334,50 @@ public class BoardHandler : EventReceiverInstance
         return Utility.GetEnumValues<Side>().Sum( side => ScoreSameRuleSide( pos, side ) );
     }
 
-    private int ScorePatternRuleSide( Vector2Int pos, Side side, Vector2Int direction )
+    private int ScorePatternRuleSide( Vector2Int pos, Side side, Vector2Int direction, bool consumePatterns )
     {
-        var curLeft = GetCurrentSide( pos, side );
-        var nextLeft = GetCurrentSide( pos + direction, side );
-        var nextNextLeft = GetCurrentSide( pos + direction * 2, side );
-        return curLeft.HasValue && nextLeft.HasValue && nextNextLeft.HasValue &&
-            (
-                ( curLeft.Value.colour == nextLeft.Value.colour && curLeft.Value.colour == nextNextLeft.Value.colour ) ||
-                ( curLeft.Value.value == nextLeft.Value.value && curLeft.Value.value == nextNextLeft.Value.value )
-            ) ? constants.patternExtraScore : 0;
+        var current = GetCurrentSide( pos, side );
+        if( current.patternUsed )
+            return 0;
+
+        bool valueMatch = true;
+        bool colourMatch = true;
+        for( int i = 1; i < constants.patternLengthMin; ++i )
+        {
+            var next = GetCurrentSide( pos + direction * i, side );
+            if( next == null )
+                return 0;
+            if( next.patternUsed )
+                return 0;
+            valueMatch &= current.value == next.value;
+            colourMatch &= current.colour == next.colour;
+            if( !valueMatch && !colourMatch )
+                return 0;
+        }
+
+        if( consumePatterns )
+        {
+            var min = new Vector2Int( 
+                direction.x == 0 ? pos.x : boardSize / 2 * direction.x, 
+                direction.y == 0 ? pos.y : boardSize / 2 * direction.y );
+
+            for( int i = 0; i < boardSize; ++i )
+            {
+                var curSide = GetCurrentSide( min + direction * i, side );
+                if( curSide != null )
+                    curSide.patternUsed = true;
+            }
+        }
+
+        return constants.patternExtraScore;
     }
 
-    private int ScorePatternRule( Vector2Int pos )
+    private int ScorePatternRule( Vector2Int pos, bool consumePatterns )
     {
         return Utility.GetEnumValues<Side>().Sum( side =>
             Mathf.Max(
-                ScorePatternRuleSide( pos, side, directions[( int )Side.Up]),
-                ScorePatternRuleSide( pos, side, directions[( int )Side.Down] )
-            ) +
-            Mathf.Max(
-                ScorePatternRuleSide( pos, side, directions[( int )Side.Right] ),
-                ScorePatternRuleSide( pos, side, directions[( int )Side.Left] )
-            ) );
+                ScorePatternRuleSide( pos, side, directions[side.Value()], consumePatterns ),
+                ScorePatternRuleSide( pos, side.Opposite(), directions[side.Value()], consumePatterns ) )
+            );
     }
 }

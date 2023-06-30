@@ -7,4 +7,5 @@ public class GameConstants : ScriptableObject
     public int deckNumStartingCards = 4;
     public int oneSideExtraScore = 1;
     public int patternExtraScore = 2;
+    public int patternLengthMin = 3;
 }

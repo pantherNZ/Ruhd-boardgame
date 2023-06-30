@@ -9,20 +9,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ce01ab46ea30d2479a97ceb09b82341, type: 3}
+  m_Script: {fileID: 11500000, guid: 0b193e42b6a18da4b914a906b291b881, type: 3}
   m_Name: Tile36
   m_EditorClassIdentifier: 
   sides:
   - value: 4
     colour: 4
     card: {fileID: 11400000}
+    patternUsed: 0
   - value: 2
     colour: 2
     card: {fileID: 11400000}
+    patternUsed: 0
   - value: 2
     colour: 1
     card: {fileID: 11400000}
+    patternUsed: 0
   - value: 1
     colour: 4
     card: {fileID: 11400000}
+    patternUsed: 0
   imagePath: Textures/Tiles/36 - Unnamed (Front)

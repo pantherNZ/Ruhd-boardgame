@@ -6,20 +6,26 @@ public class DeckHandler : EventReceiverInstance
 {
     [SerializeField] GameConstants constants;
     [SerializeField] HorizontalLayoutGroup slotsPanelUI;
-    [SerializeField] CardComponent tilePrefab;
-    private List<CardComponent> slots;
-    private List<CardData> allCards;
+    [SerializeField] TileComponent tilePrefab;
+    [SerializeField] Sprite cardBackSprite;
+    private List<TileComponent> slots;
+    private List<TileData> allCards;
     private int? selectedCardFromSlot;
 
     protected override void Start()
     {
         base.Start();
 
+        Reset();
+    }
+
+    public void Reset()
+    {
         if( constants.rngSeed != 0 )
             Random.InitState( constants.rngSeed );
 
-       slots = new List<CardComponent>();
-        allCards = new List<CardData>();
+        slots = new List<TileComponent>();
+        allCards = new List<TileData>();
         foreach( var card in DataHandler.GetAllCards() )
             allCards.Add( Instantiate( card ) );
         allCards.RandomShuffle();
@@ -38,11 +44,12 @@ public class DeckHandler : EventReceiverInstance
         return slots.IsEmpty();
     }
 
-    public CardComponent DrawCard( bool randomRotation )
+    public TileComponent DrawTile( bool randomRotation )
     {
         var cardData = allCards.PopBack();
         var newCard = Instantiate( tilePrefab );
         newCard.data = cardData;
+        newCard.backsideSprite = cardBackSprite;
 
         var sprite = Resources.Load<Sprite>( cardData.imagePath );
         newCard.GetComponent<Image>().sprite = Instantiate( sprite );
@@ -55,7 +62,7 @@ public class DeckHandler : EventReceiverInstance
 
     public void DrawCardToOpenHand()
     {
-        var newCard = DrawCard( true );
+        var newCard = DrawTile( true );
         slots.Add( newCard );
         newCard.transform.SetParent( slotsPanelUI.transform );
     }
@@ -66,19 +73,19 @@ public class DeckHandler : EventReceiverInstance
         {
             foreach( var( idx, card ) in slots.Enumerate() )
             {
-                if( tileSelectedEvent.card == card )
+                if( tileSelectedEvent.tile == card )
                 {
                     selectedCardFromSlot = idx;
                     break;
                 }
             }
         }
-        else if( e is TilePlacedEvent tilePlaced )
+        else if( e is TilePlacedEvent tilePlaced && !tilePlaced.tile.flipped )
         {
-            if( !tilePlaced.wasPlacedOnBoard )
+            if( !tilePlaced.successfullyPlaced )
             {
                 // + 1 to account for the placeholder deck card
-                tilePlaced.card.transform.SetSiblingIndex( selectedCardFromSlot.Value + 1 );
+                tilePlaced.tile.transform.SetSiblingIndex( selectedCardFromSlot.Value + 1 );
                 LayoutRebuilder.ForceRebuildLayoutImmediate( slotsPanelUI.transform as RectTransform );
             }
             else

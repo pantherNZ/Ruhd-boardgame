@@ -11,13 +11,13 @@ public class DataHandler : MonoBehaviour
     const string imagesDataPath = "Data/Images";
     const string tilesImportPath = "Assets/Resources/Tiles";
 
-    static List<CardData> cachedCards;
+    static List<TileData> cachedCards;
 
-    public static List<CardData> GetAllCards()
+    public static List<TileData> GetAllCards()
     {
         if( cachedCards == null )
         {
-            var cards = Resources.LoadAll<CardData>( "Tiles" );
+            var cards = Resources.LoadAll<TileData>( "Tiles" );
             cachedCards = cards.ToList();
         }
         return cachedCards;
@@ -36,12 +36,12 @@ public class DataHandler : MonoBehaviour
         {
             var cardNumbers = number.Split( ',' );
             var cardColours = colour.Split( ',' );
-            var newCard = ScriptableObject.CreateInstance<CardData>();
+            var newCard = ScriptableObject.CreateInstance<TileData>();
             newCard.imagePath = image.Trim();
 
             for( int i = 0; i < Utility.GetNumEnumValues<Side>(); ++i )
             {
-                newCard.sides[i] = new CardSide( newCard, int.Parse( cardNumbers[i].Trim() ), int.Parse( cardColours[i].Trim() ) );
+                newCard.sides[i] = new TileSide( newCard, int.Parse( cardNumbers[i].Trim() ), int.Parse( cardColours[i].Trim() ) );
             }
 
             AssetDatabase.CreateAsset( newCard, tilesImportPath + "/Tile" + idx + ".asset" );

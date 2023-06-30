@@ -1,18 +1,18 @@
 ﻿
 class TileSelectedEvent : IBaseEvent
 {
-    public CardComponent card;
+    public TileComponent tile;
 }
 
 class TileDroppedEvent : IBaseEvent
 {
-    public CardComponent card;
+    public TileComponent tile;
 }
 
 class TilePlacedEvent : IBaseEvent
 {
-    public CardComponent card;
-    public bool wasPlacedOnBoard;
+    public TileComponent tile;
+    public bool successfullyPlaced;
 }
 
 class PlayerScoreEvent : IBaseEvent
