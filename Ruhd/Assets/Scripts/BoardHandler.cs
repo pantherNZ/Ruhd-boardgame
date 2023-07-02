@@ -123,7 +123,7 @@ public class BoardHandler : EventReceiverInstance
 
     private void AddToGrid( Vector2Int pos, TileComponent tile )
     {
-        tile.transform.SetParent( grid );
+        tile.transform.SetParent( grid, false );
         tile.transform.localPosition = GetPositionOnGrid( pos );
     }
 
@@ -205,7 +205,7 @@ public class BoardHandler : EventReceiverInstance
             return;
 
         var highlight = Instantiate( highlightTilePrefab );
-        highlight.transform.SetParent( grid );
+        highlight.transform.SetParent( grid, false );
         highlight.transform.localPosition = GetPositionOnGrid( pos );
         highlights.Add( pos, highlight );
     }

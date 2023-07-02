@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class DeckHandler : EventReceiverInstance
 {
     [SerializeField] GameConstants constants;
+    [SerializeField] Canvas canvas;
     [SerializeField] HorizontalLayoutGroup slotsPanelUI;
     [SerializeField] TileComponent tilePrefab;
     [SerializeField] Sprite cardBackSprite;
@@ -50,6 +51,7 @@ public class DeckHandler : EventReceiverInstance
         var newCard = Instantiate( tilePrefab );
         newCard.data = cardData;
         newCard.backsideSprite = cardBackSprite;
+        newCard.GetComponent<Draggable>().AssignCanvas( canvas );
 
         var sprite = Resources.Load<Sprite>( cardData.imagePath );
         newCard.GetComponent<Image>().sprite = Instantiate( sprite );
@@ -64,7 +66,7 @@ public class DeckHandler : EventReceiverInstance
     {
         var newCard = DrawTile( true );
         slots.Add( newCard );
-        newCard.transform.SetParent( slotsPanelUI.transform );
+        newCard.transform.SetParent( slotsPanelUI.transform, false );
     }
 
     public override void OnEventReceived( IBaseEvent e )

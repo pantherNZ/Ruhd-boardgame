@@ -27,7 +27,7 @@ public class MenuUI : MonoBehaviour
 
                 var tile = deck.DrawTile( true );
                 allTiles.Add( tile );
-                tile.transform.SetParent( background.transform );
+                tile.transform.SetParent( background.transform, false );
                 ( tile.transform as RectTransform ).anchorMin = new Vector2( 0.5f, 0.5f );
                 ( tile.transform as RectTransform ).anchorMax = new Vector2( 0.5f, 0.5f );
                 ( tile.transform as RectTransform ).anchoredPosition = GetPosition( new Vector2Int( x, y ) );

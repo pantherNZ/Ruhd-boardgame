@@ -5,8 +5,9 @@ using System;
 
 public class Draggable : MonoBehaviour
 {
-    bool dragging;
-    Vector2 offset, startPos;
+    [SerializeField] Canvas canvas;
+    private bool dragging;
+    private Vector2 offset, startPos;
 
     new RectTransform transform;
     public Action<Draggable, Vector3> updatePosition;
@@ -18,6 +19,23 @@ public class Draggable : MonoBehaviour
         transform = base.transform as RectTransform;
     }
 
+    public void AssignCanvas( Canvas canvas )
+    {
+        this.canvas = canvas;
+    }
+
+    private Vector2 GetMousePos()
+    {
+        if( canvas != null )
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.transform as RectTransform, Utility.GetMouseOrTouchPos(), Camera.main, out var localPos );
+            return localPos;
+        }
+
+        return Utility.GetMouseOrTouchPos();
+    }
+
     public void StartDrag()
     {
         if( dragging || !enabled )
@@ -25,7 +43,7 @@ public class Draggable : MonoBehaviour
 
         dragging = true;
         startPos = transform.anchoredPosition;
-        var targetPos = Utility.GetMouseOrTouchPos();
+        var targetPos = GetMousePos();
         offset = transform.anchoredPosition - new Vector2( targetPos.x, targetPos.y );
     }
 
@@ -60,7 +78,7 @@ public class Draggable : MonoBehaviour
     {
         if( dragging )
         {
-            var targetPos = Utility.GetMouseOrTouchPos() + offset;
+            var targetPos = GetMousePos() + offset;
             if( updatePosition != null )
                 updatePosition.Invoke( this, targetPos );
             else
