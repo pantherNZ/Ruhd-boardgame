@@ -90,7 +90,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f86bc2d1a9956ed4496fb48d5237d76d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _rotation: 0
   data: {fileID: 0}
+  flipped: 0
+  backsideSprite: {fileID: 0}
 --- !u!114 &6900588042146844479
 MonoBehaviour:
   m_ObjectHideFlags: 0

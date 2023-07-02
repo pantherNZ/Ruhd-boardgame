@@ -9,7 +9,7 @@ public class DeckHandler : EventReceiverInstance
     [SerializeField] TileComponent tilePrefab;
     [SerializeField] Sprite cardBackSprite;
     private List<TileComponent> slots;
-    private List<TileData> allCards;
+    private List<TileData> allTiles;
     private int? selectedCardFromSlot;
 
     protected override void Start()
@@ -25,10 +25,10 @@ public class DeckHandler : EventReceiverInstance
             Random.InitState( constants.rngSeed );
 
         slots = new List<TileComponent>();
-        allCards = new List<TileData>();
+        allTiles = new List<TileData>();
         foreach( var card in DataHandler.GetAllCards() )
-            allCards.Add( Instantiate( card ) );
-        allCards.RandomShuffle();
+            allTiles.Add( Instantiate( card ) );
+        allTiles.RandomShuffle();
 
         for( int i = 0; i < constants.deckNumStartingCards; ++i )
             DrawCardToOpenHand();
@@ -36,7 +36,7 @@ public class DeckHandler : EventReceiverInstance
 
     public bool IsDeckEmpty()
     {
-        return allCards.IsEmpty();
+        return allTiles.IsEmpty();
     }
 
     public bool IsOpenHandEmpty()
@@ -46,7 +46,7 @@ public class DeckHandler : EventReceiverInstance
 
     public TileComponent DrawTile( bool randomRotation )
     {
-        var cardData = allCards.PopBack();
+        var cardData = allTiles.PopBack();
         var newCard = Instantiate( tilePrefab );
         newCard.data = cardData;
         newCard.backsideSprite = cardBackSprite;
@@ -71,16 +71,17 @@ public class DeckHandler : EventReceiverInstance
     {
         if( e is TileSelectedEvent tileSelectedEvent )
         {
-            foreach( var( idx, card ) in slots.Enumerate() )
+            foreach( var( idx, tile ) in slots.Enumerate() )
             {
-                if( tileSelectedEvent.tile == card )
+                if( tileSelectedEvent.tile == tile )
                 {
                     selectedCardFromSlot = idx;
                     break;
                 }
             }
         }
-        else if( e is TilePlacedEvent tilePlaced && !tilePlaced.tile.flipped )
+        // Check we have a slot selected as this component is also used by the menu (and will receive events if still active)
+        else if( e is TilePlacedEvent tilePlaced && !tilePlaced.tile.flipped && selectedCardFromSlot.HasValue )
         {
             if( !tilePlaced.successfullyPlaced )
             {

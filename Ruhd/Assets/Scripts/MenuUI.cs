@@ -1,27 +1,22 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MenuUI : MonoBehaviour
 {
+    [SerializeField] Image background;
     [SerializeField] DeckHandler deck;
     [SerializeField] Vector2Int gridSize;
     [SerializeField] Vector2 cellSize;
     [SerializeField] Vector2 padding;
     [SerializeField] int flippedChancePercent;
-    [SerializeField] TMPro.TextMeshProUGUI titleText;
-    [SerializeField] TMPro.TextMeshProUGUI playText;
-    [SerializeField] float fadeTimeSec = 0.5f;
-
-    private CanvasGroup titleCanvas;
-    private CanvasGroup playCanvas;
-    private Coroutine fadeInCoroutine;
-    private Coroutine fadeOutCoroutine;
+    [SerializeField] int howToPlayChancePercent;
+    [SerializeField] GameObject playTilePrefab;
+    [SerializeField] GameObject howToPlayTilePrefab;
 
     private void Start()
     {
-        titleCanvas = titleText.GetComponent<CanvasGroup>();
-        playCanvas = playText.GetComponent<CanvasGroup>();
+        var allTiles = new List<TileComponent>();
 
         for( int y = -gridSize.y / 2; y < gridSize.y / 2; ++y )
         {
@@ -31,42 +26,42 @@ public class MenuUI : MonoBehaviour
                     continue;
 
                 var tile = deck.DrawTile( true );
-                tile.transform.SetParent( transform );
-                tile.transform.localPosition = GetPosition( new Vector2Int( x, y ) );
-
-                if( Random.Range( 0, 100 ) < flippedChancePercent )
-                    tile.ShowBack();
+                allTiles.Add( tile );
+                tile.transform.SetParent( background.transform );
+                ( tile.transform as RectTransform ).anchorMin = new Vector2( 0.5f, 0.5f );
+                ( tile.transform as RectTransform ).anchorMax = new Vector2( 0.5f, 0.5f );
+                ( tile.transform as RectTransform ).anchoredPosition = GetPosition( new Vector2Int( x, y ) );
 
                 if( deck.IsDeckEmpty() )
                     deck.Reset();
+
+                if( y >= -2 && y < 2 && x >= -3 && x < 3 )
+                    continue;
+
+                if( Random.Range( 0, 100 ) < flippedChancePercent )
+                    ReplaceTile( tile.gameObject, playTilePrefab, true );
+
+                if( Random.Range( 0, 100 ) < howToPlayChancePercent )
+                    ReplaceTile( tile.gameObject, howToPlayTilePrefab, true );
             }
         }
+
+        ReplaceTile( allTiles.RandomItem().gameObject, howToPlayTilePrefab, true );
+    }
+
+    private void ReplaceTile( GameObject replacee, GameObject prefab, bool resetRotation )
+    {
+        var replacement = Instantiate( prefab, transform );
+        replacement.transform.Match( replacee.transform );
+        if( resetRotation )
+            replacement.transform.rotation = Quaternion.identity;
+        replacee.Destroy();
     }
 
     private Vector2 GetPosition( Vector2Int pos )
     {
-        return new Vector2(
+        return cellSize / 2.0f + new Vector2(
             pos.x * ( cellSize.x + padding.x ),
-            pos.y * ( cellSize.y + padding.y ) ) + cellSize / 2.0f;
-    }
-
-    public void ToggleFadeText( bool showPlayGame )
-    {
-        titleText.gameObject.SetActive( true );
-        playText.gameObject.SetActive( true );
-
-        var fadeIn = showPlayGame ? playCanvas : titleCanvas;
-        var fadeOut = showPlayGame ? titleCanvas : playCanvas;
-
-        if( fadeInCoroutine != null )
-        {
-            StopCoroutine( fadeInCoroutine );
-            StopCoroutine( fadeOutCoroutine );
-        }
-
-        fadeInCoroutine = StartCoroutine( Utility.FadeFromBlack( fadeIn, fadeTimeSec ) );
-        fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec ) );
-
-        Debug.Log( showPlayGame.ToString() );
+            pos.y * ( cellSize.y + padding.y ) );
     }
 }
