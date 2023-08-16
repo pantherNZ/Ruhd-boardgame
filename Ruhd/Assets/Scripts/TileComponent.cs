@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,11 +10,7 @@ public class TileComponent : MonoBehaviour
     public Side rotation
     {
         get => _rotation;
-        set
-        {
-            _rotation = value;
-            ( transform as RectTransform ).localEulerAngles = new Vector3( 0.0f, 0.0f, ( float )_rotation * -90.0f );
-        }
+        set => SetRotation( value, false );
     }
 
     public TileData data;
@@ -22,12 +19,39 @@ public class TileComponent : MonoBehaviour
 
     [HideInInspector] public Sprite backsideSprite;
     private Sprite storedSprite;
-    private float storedRotation;
+    private Side storedRotation;
+    private Coroutine rotationInterp;
 
     public void SetInteractable( bool interactable )
     {
         GetComponent<Draggable>().enabled = interactable;
         GetComponent<EventDispatcherV2>().enabled = interactable;
+    }
+
+    public void SkipRotateInterpolation()
+    {
+        if( rotationInterp != null )
+            StopCoroutine( rotationInterp );
+        transform.localEulerAngles = new Vector3( 0.0f, 0.0f, ( float )_rotation * -90.0f );
+        rotationInterp = null;
+    }
+
+    public void SetRotation( Side newRot, bool interpolate )
+    {
+        SkipRotateInterpolation();
+        _rotation = newRot;
+        if( interpolate )
+            rotationInterp = StartCoroutine( InterpolateRotation() );
+        else
+            SkipRotateInterpolation();
+    }
+    
+    IEnumerator InterpolateRotation()
+    {
+        var newRotation = ( float )_rotation * -90.0f - transform.localEulerAngles.z;
+        newRotation = Utility.Mod( newRotation + 180, 360 ) - 180;
+        yield return Utility.InterpolateRotation( transform, new Vector3( 0.0f, 0.0f, newRotation ), GameConstants.Instance.tileRotationInterpSec, true );
+        rotationInterp = null;
     }
 
     public void ShowBack()
@@ -36,7 +60,7 @@ public class TileComponent : MonoBehaviour
         storedSprite = image.sprite;
         image.sprite = backsideSprite;
         var rectTransform = transform as RectTransform;
-        storedRotation = rectTransform.localEulerAngles.z;
+        storedRotation = _rotation;
         rectTransform.localEulerAngles = new Vector3( 0.0f, 0.0f, 0.0f );
         flipped = true;
     }
@@ -45,7 +69,8 @@ public class TileComponent : MonoBehaviour
     {
         var image = GetComponent<Image>();
         image.sprite = storedSprite;
-        ( transform as RectTransform ).localEulerAngles = new Vector3( 0.0f, 0.0f, storedRotation );
+        rotation = storedRotation;
+        SkipRotateInterpolation();
 
         if( confirmed )
             flipped = false;
@@ -67,9 +92,9 @@ public class TileComponent : MonoBehaviour
     {
         if( dragging )
         {
-            if( Mathf.Abs( Input.mouseScrollDelta.y ) > 0.001f )
+            if( rotationInterp != null && Mathf.Abs( Input.mouseScrollDelta.y ) > 0.001f )
             {
-                rotation = ( Side )Utility.Mod( ( int )rotation + Mathf.RoundToInt( Mathf.Sign( Input.mouseScrollDelta.y ) ), 4 );
+                SetRotation( ( Side )Utility.Mod( ( int )rotation + Mathf.RoundToInt( Mathf.Sign( Input.mouseScrollDelta.y ) ), 4 ), true );
             }
         }
     }

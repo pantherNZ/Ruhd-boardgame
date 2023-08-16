@@ -32,7 +32,6 @@ public class ScoresHandler : EventReceiverInstance
             var player = players.Find( x => x.playerIdx == scoreEvent.playerIdx );
             player.score += scoreEvent.scoreModifier;
             player.scoreText.text = players[scoreEvent.playerIdx].score.ToString();
-            SortScores();
         }
     }
 

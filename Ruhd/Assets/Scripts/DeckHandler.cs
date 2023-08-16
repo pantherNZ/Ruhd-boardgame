@@ -9,7 +9,7 @@ public class DeckHandler : EventReceiverInstance
     [SerializeField] HorizontalLayoutGroup slotsPanelUI;
     [SerializeField] TileComponent tilePrefab;
     [SerializeField] Sprite cardBackSprite;
-    private List<TileComponent> slots;
+    private List<TileComponent> openHand;
     private List<TileData> allTiles;
     private int? selectedCardFromSlot;
 
@@ -25,7 +25,7 @@ public class DeckHandler : EventReceiverInstance
         if( constants.rngSeed != 0 )
             Random.InitState( constants.rngSeed );
 
-        slots = new List<TileComponent>();
+        openHand = new List<TileComponent>();
         allTiles = new List<TileData>();
         foreach( var card in DataHandler.GetAllCards() )
             allTiles.Add( Instantiate( card ) );
@@ -42,7 +42,7 @@ public class DeckHandler : EventReceiverInstance
 
     public bool IsOpenHandEmpty()
     {
-        return slots.IsEmpty();
+        return openHand.IsEmpty();
     }
 
     public TileComponent DrawTile( bool randomRotation )
@@ -65,7 +65,7 @@ public class DeckHandler : EventReceiverInstance
     public void DrawCardToOpenHand()
     {
         var newCard = DrawTile( true );
-        slots.Add( newCard );
+        openHand.Add( newCard );
         newCard.transform.SetParent( slotsPanelUI.transform, false );
     }
 
@@ -73,7 +73,9 @@ public class DeckHandler : EventReceiverInstance
     {
         if( e is TileSelectedEvent tileSelectedEvent )
         {
-            foreach( var( idx, tile ) in slots.Enumerate() )
+            selectedCardFromSlot = null;
+
+            foreach( var( idx, tile ) in openHand.Enumerate() )
             {
                 if( tileSelectedEvent.tile == tile )
                 {
@@ -94,7 +96,7 @@ public class DeckHandler : EventReceiverInstance
             else
             {
                 // Successfully placed
-                slots.RemoveAt( selectedCardFromSlot.Value );
+                openHand.RemoveAt( selectedCardFromSlot.Value );
 
                 //If deck is empty then we need to draw more tiles
                 if( IsOpenHandEmpty() )

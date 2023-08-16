@@ -16,3 +16,5 @@ MonoBehaviour:
   deckNumStartingCards: 4
   oneSideExtraScore: 1
   patternExtraScore: 2
+  patternLengthMin: 3
+  tileRotationInterpSec: 0.1
