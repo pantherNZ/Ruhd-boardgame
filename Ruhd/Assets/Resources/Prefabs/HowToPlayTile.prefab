@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8960054524823183842}
   - component: {fileID: 616335228638513208}
   - component: {fileID: 9081216609062210904}
+  - component: {fileID: 4088822589846368041}
   - component: {fileID: -2846213503775989867}
   m_Layer: 5
   m_Name: HowToPlayTile
@@ -30,11 +31,12 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4318822865402692707}
   - {fileID: 8400077986419396260}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -91,10 +93,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf0bd5b5805b78a47a6dd94ec9329a9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseText: {fileID: 6660802350501687552}
-  alternativeText: {fileID: 8484625361111973810}
+  mainCanvas: {fileID: 4736154166585951752}
+  alternativeCanvas: {fileID: 1202877142047344746}
   fadeTimeSec: 0.5
-  highlightTextColour: {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &4088822589846368041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 925260688024719224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7157c2d8ff7ea3140958b3c14869bc25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &-2846213503775989867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -167,8 +180,8 @@ MonoBehaviour:
   OnPointerDownEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 9081216609062210904}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
+      - m_Target: {fileID: 4088822589846368041}
+        m_TargetAssemblyTypeName: MenuVideoTileUI, Assembly-CSharp
         m_MethodName: ShowVideo
         m_Mode: 1
         m_Arguments:
@@ -225,6 +238,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1235451911621547552}
   m_RootOrder: 0
@@ -372,6 +386,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1235451911621547552}
   m_RootOrder: 1
