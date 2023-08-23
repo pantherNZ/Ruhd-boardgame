@@ -1,15 +1,11 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.Video;
 
 public class MenuTileUI : MonoBehaviour
 {
     [SerializeField] CanvasGroup mainCanvas;
     [SerializeField] CanvasGroup alternativeCanvas;
-    [SerializeField] RectTransform centreMenuArea;
     [SerializeField] float fadeTimeSec = 0.5f;
 
-    private bool centreHighlight;
     private Coroutine fadeInCoroutine;
     private Coroutine fadeOutCoroutine;
 
@@ -29,19 +25,5 @@ public class MenuTileUI : MonoBehaviour
 
         fadeInCoroutine = StartCoroutine( Utility.FadeFromBlack( fadeIn, fadeTimeSec ) );
         fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec ) );
-    }
-
-    public void StartGame()
-    {
-        SceneManager.LoadSceneAsync( "GameScene", LoadSceneMode.Additive );
-    }
-
-    private void Update()
-    {
-        if( centreMenuArea != null && centreHighlight != centreMenuArea.GetSceenSpaceRect().Contains( Utility.GetMouseOrTouchPos() ) )
-        {
-            centreHighlight = !centreHighlight;
-            ToggleFadeText( centreHighlight );
-        }
     }
 }

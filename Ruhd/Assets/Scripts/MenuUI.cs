@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Unity.Netcode;
 
-public class MenuUI : MonoBehaviour
+public class MenuUI : MenuTileUI
 {
     [SerializeField] Image background;
     [SerializeField] DeckHandler deck;
@@ -12,7 +14,10 @@ public class MenuUI : MonoBehaviour
     [SerializeField] int howToPlayChancePercent;
     [SerializeField] GameObject playTilePrefab;
     [SerializeField] GameObject howToPlayTilePrefab;
-    Vector2Int gridSize;
+    [SerializeField] RectTransform centreMenuArea;
+
+    private Vector2Int gridSize;
+    private bool centreHighlight;
 
     private void Start()
     {
@@ -83,5 +88,19 @@ public class MenuUI : MonoBehaviour
         return cellSize / 2.0f + padding / 2.0f + new Vector2(
             pos.x * ( cellSize.x + padding.x ),
             pos.y * ( cellSize.y + padding.y ) );
+    }
+
+    private void Update()
+    {
+        if( centreMenuArea != null && centreHighlight != centreMenuArea.GetSceenSpaceRect().Contains( Utility.GetMouseOrTouchPos() ) )
+        {
+            centreHighlight = !centreHighlight;
+            ToggleFadeText( centreHighlight );
+        }
+    }
+
+    public void StartGame()
+    {
+        SceneManager.LoadSceneAsync( "GameScene", LoadSceneMode.Additive );
     }
 }
