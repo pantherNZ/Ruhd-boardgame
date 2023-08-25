@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,13 +22,15 @@ public class ScoresHandler : EventReceiverInstance
     protected override void Start()
     {
         base.Start();
-
-        InitPlayers( new List<string>() { "Test1", "PC", "PC 2" } );
     }
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is PlayerScoreEvent scoreEvent )
+        if( e is PlayersReadyEvent playersReadyEvent )
+        {
+            InitPlayers( playersReadyEvent.playerNames.Select( x => x.ToString() ).ToList() );
+        }
+        else if( e is PlayerScoreEvent scoreEvent )
         {
             var player = players.Find( x => x.playerIdx == scoreEvent.playerIdx );
             player.score += scoreEvent.scoreModifier;

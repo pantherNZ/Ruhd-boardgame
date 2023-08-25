@@ -1,8 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Unity.Netcode;
 
 public class MenuUI : MenuTileUI
 {
@@ -101,6 +100,12 @@ public class MenuUI : MenuTileUI
 
     public void StartGame()
     {
-        SceneManager.LoadSceneAsync( "GameScene", LoadSceneMode.Additive );
+        StartCoroutine( HideMenu() );
+    }
+
+    private IEnumerator HideMenu()
+    {
+        yield return Utility.FadeToBlack( GetComponent<CanvasGroup>(), 0.5f );
+        gameObject.SetActive( false );
     }
 }

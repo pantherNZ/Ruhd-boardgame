@@ -18,10 +18,10 @@ public class MenuTileUI : MonoBehaviour
         var fadeOut = showPlayGame ? mainCanvas : alternativeCanvas;
 
         if( fadeInCoroutine != null )
-        {
             StopCoroutine( fadeInCoroutine );
+
+        if( fadeOutCoroutine != null )
             StopCoroutine( fadeOutCoroutine );
-        }
 
         fadeInCoroutine = StartCoroutine( Utility.FadeFromBlack( fadeIn, fadeTimeSec ) );
         fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec ) );
