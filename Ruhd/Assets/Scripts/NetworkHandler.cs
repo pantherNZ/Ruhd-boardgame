@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,18 +16,23 @@ public class NetworkHandler : MonoBehaviour
 {
     public string localPlayerName;
     private Lobby lobby;
-    private Coroutine lobbyHeartBeatCoroutine;
+    private Coroutine lobbyHeartbeatCoroutine;
     private Coroutine lobbyPollCoroutine;
     private System.DateTime lastLobbyUpdate;
 
     async void Start()
     {
-        await UnityServices.InitializeAsync();
+        var guid = Guid.NewGuid().ToString( "n" );
+        guid = guid[..Mathf.Min( guid.Length, 30 )];
+        var options = new InitializationOptions();
+        options.SetProfile( guid );
+        await UnityServices.InitializeAsync( options );
 
         AuthenticationService.Instance.SignedIn += () =>
         {
             Debug.Log( "Signed in: " + AuthenticationService.Instance.PlayerId );
         };
+
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
     }
 
@@ -57,7 +63,7 @@ public class NetworkHandler : MonoBehaviour
             };
             lobby = await LobbyService.Instance.CreateLobbyAsync( localPlayerName, 4, lobbyOptions );
             EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() { lobby = lobby } );
-            lobbyHeartBeatCoroutine = StartCoroutine( SendLobbyHeartBeat() );
+            lobbyHeartbeatCoroutine = StartCoroutine( SendLobbyHeartbeat() );
             lobbyPollCoroutine = StartCoroutine( PollLobbyUpdates() );
         }
         catch( LobbyServiceException e )
@@ -68,8 +74,8 @@ public class NetworkHandler : MonoBehaviour
 
     public async void LeaveLobby()
     {
-        if( lobbyHeartBeatCoroutine != null )
-            StopCoroutine( lobbyHeartBeatCoroutine );
+        if( lobbyHeartbeatCoroutine != null )
+            StopCoroutine( lobbyHeartbeatCoroutine );
 
         if( lobbyPollCoroutine != null )
             StopCoroutine( lobbyPollCoroutine );
@@ -95,12 +101,13 @@ public class NetworkHandler : MonoBehaviour
         }
     }
 
-    private IEnumerator SendLobbyHeartBeat()
+    private IEnumerator SendLobbyHeartbeat()
     {
         while( true )
         {
             yield return new WaitForSeconds( 20.0f );
-            yield return Task.Run( () => LobbyService.Instance.SendHeartbeatPingAsync( lobby.Id ) );
+            var sendHeartbeat = LobbyService.Instance.SendHeartbeatPingAsync( lobby.Id );
+            yield return new WaitUntil( () => sendHeartbeat.IsCompleted );
         }
     }
 
@@ -109,8 +116,8 @@ public class NetworkHandler : MonoBehaviour
         while( true )
         {
             yield return new WaitForSeconds( 2.0f );
-            var getLobbytask = Task.Run( () => LobbyService.Instance.GetLobbyAsync( lobby.Id ) );
-            yield return getLobbytask;
+            var getLobbytask = LobbyService.Instance.GetLobbyAsync( lobby.Id );
+            yield return new WaitUntil( () => getLobbytask.IsCompleted );
             lobby = getLobbytask.Result;
 
             if( lobby.LastUpdated > lastLobbyUpdate )
@@ -119,9 +126,9 @@ public class NetworkHandler : MonoBehaviour
 
                 EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() { lobby = lobby } );
 
-                if( lobby.Data.TryGetValue( "StartGame", out var joinCode ) )
+                if( lobby.Data != null && lobby.Data.TryGetValue( "StartGame", out var joinCode ) )
                 {
-                    StopCoroutine( lobbyHeartBeatCoroutine );
+                    StopCoroutine( lobbyHeartbeatCoroutine );
                     var isHost = lobby.HostId == AuthenticationService.Instance.PlayerId;
                     lobby = null;
                     if( !isHost )
@@ -150,8 +157,8 @@ public class NetworkHandler : MonoBehaviour
                 }
             } );
 
-            if( lobbyHeartBeatCoroutine != null )
-                StopCoroutine( lobbyHeartBeatCoroutine );
+            if( lobbyHeartbeatCoroutine != null )
+                StopCoroutine( lobbyHeartbeatCoroutine );
 
             if( lobbyPollCoroutine != null )
                 StopCoroutine( lobbyPollCoroutine );
@@ -182,9 +189,9 @@ public class NetworkHandler : MonoBehaviour
     {
         try
         {
-            
+
         }
-       catch( RelayServiceException e )
+        catch( RelayServiceException e )
         {
             Debug.LogError( e );
         }

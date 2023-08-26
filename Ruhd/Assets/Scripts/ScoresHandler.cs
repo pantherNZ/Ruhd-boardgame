@@ -26,9 +26,9 @@ public class ScoresHandler : EventReceiverInstance
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is PlayersReadyEvent playersReadyEvent )
+        if( e is LobbyUpdatedEvent lobbyUpdated )
         {
-            InitPlayers( playersReadyEvent.playerNames.Select( x => x.ToString() ).ToList() );
+            InitPlayers( lobbyUpdated.lobby.Players.Select( x => x.Data["PlayerName"].Value ).ToList() );
         }
         else if( e is PlayerScoreEvent scoreEvent )
         {
@@ -38,11 +38,23 @@ public class ScoresHandler : EventReceiverInstance
         }
     }
 
-    public void InitPlayers(List<string> players )
+    public void InitPlayers(List<string> playerNames )
     {
-        this.players = new List<PlayerEntry>();
+        if( players != null )
+        {
+            foreach( var (idx, player) in players.Enumerate() )
+            {
+                if( idx > 0 )
+                {
+                    player.nameText.DestroyObject();
+                    player.scoreText.DestroyObject();
+                }
+            }
+        }
 
-        foreach( var( idx, player ) in players.Enumerate() )
+        players = new List<PlayerEntry>();
+
+        foreach( var( idx, player ) in playerNames.Enumerate() )
         {
             var nameText = scoreNames.GetChild( 0 );
             var scoreText = scoreValues.GetChild( 0 );
