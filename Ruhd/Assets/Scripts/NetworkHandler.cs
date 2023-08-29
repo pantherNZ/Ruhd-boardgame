@@ -18,7 +18,7 @@ public class NetworkHandler : MonoBehaviour
     private Lobby lobby;
     private Coroutine lobbyHeartbeatCoroutine;
     private Coroutine lobbyPollCoroutine;
-    private System.DateTime lastLobbyUpdate;
+    private DateTime lastLobbyUpdate;
 
     async void Start()
     {
@@ -162,6 +162,8 @@ public class NetworkHandler : MonoBehaviour
 
             if( lobbyPollCoroutine != null )
                 StopCoroutine( lobbyPollCoroutine );
+
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() {} );
         }
         catch( RelayServiceException e )
         {
@@ -178,6 +180,7 @@ public class NetworkHandler : MonoBehaviour
             var serverData = new RelayServerData( allocation, "dtls" );
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
             NetworkManager.Singleton.StartClient();
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() {} );
         }
         catch( RelayServiceException e )
         {

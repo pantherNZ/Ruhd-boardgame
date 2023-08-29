@@ -27,3 +27,7 @@ class PlayerScoreEvent : IBaseEvent
     public int playerIdx;
     public int scoreModifier;
 }
+
+class StartGameEvent : IBaseEvent
+{
+}

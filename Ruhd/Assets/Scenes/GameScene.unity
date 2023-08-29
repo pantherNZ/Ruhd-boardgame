@@ -468,40 +468,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 21042769}
-        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
-        m_MethodName: ConfirmName
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 699681954}
-          m_ObjectArgumentAssemblyTypeName: TMPro.TMP_InputField, Unity.TextMeshPro
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 21042769}
-        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
-        m_MethodName: HostLobby
+      - m_Target: {fileID: 1759706119}
+        m_TargetAssemblyTypeName: HostGameUI, Assembly-CSharp
+        m_MethodName: TryHostGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1408521525}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Lobby
           m_BoolArgument: 1
         m_CallState: 2
 --- !u!114 &22537271
@@ -811,16 +787,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1408521528}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ChangeStateByName
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: HostGame
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &73426356
@@ -1553,7 +1529,9 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 55986783}
-  - {fileID: 1408521529}
+  - {fileID: 647222014}
+  - {fileID: 1759706118}
+  - {fileID: 1814734269}
   - {fileID: 1889614995}
   m_Father: {fileID: 2077546462}
   m_RootOrder: 2
@@ -2353,6 +2331,7 @@ GameObject:
   - component: {fileID: 546495414}
   - component: {fileID: 546495413}
   - component: {fileID: 546495412}
+  - component: {fileID: 546495416}
   m_Layer: 5
   m_Name: CodeInput
   m_TagString: Untagged
@@ -2517,6 +2496,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -15}
   m_SizeDelta: {x: 188.986, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &546495416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546495411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f820dda267cbaf640a88f53980c81807, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &563496705
 GameObject:
   m_ObjectHideFlags: 0
@@ -2743,7 +2734,7 @@ RectTransform:
   - {fileID: 73426354}
   - {fileID: 225055725}
   - {fileID: 1148890090}
-  m_Father: {fileID: 1408521529}
+  m_Father: {fileID: 306257437}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2898,6 +2889,7 @@ GameObject:
   - component: {fileID: 699681956}
   - component: {fileID: 699681955}
   - component: {fileID: 699681954}
+  - component: {fileID: 699681958}
   m_Layer: 5
   m_Name: NameInput
   m_TagString: Untagged
@@ -2953,14 +2945,14 @@ MonoBehaviour:
   m_VerticalScrollbarEventHandler: {fileID: 0}
   m_LayoutGroup: {fileID: 0}
   m_ScrollSensitivity: 1
-  m_ContentType: 5
+  m_ContentType: 4
   m_InputType: 0
   m_AsteriskChar: 42
-  m_KeyboardType: 0
+  m_KeyboardType: 1
   m_LineType: 0
   m_HideMobileInput: 0
   m_HideSoftKeyboard: 0
-  m_CharacterValidation: 5
+  m_CharacterValidation: 4
   m_RegexValue: 
   m_GlobalPointSize: 14
   m_CharacterLimit: 15
@@ -3062,6 +3054,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 188.986, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &699681958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 699681953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f820dda267cbaf640a88f53980c81807, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &708136234
 GameObject:
   m_ObjectHideFlags: 0
@@ -3994,16 +3998,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1408521528}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ChangeStateByName
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Buttons
           m_BoolArgument: 1
         m_CallState: 2
 --- !u!114 &1034575061
@@ -4351,6 +4355,7 @@ GameObject:
   - component: {fileID: 1152017234}
   - component: {fileID: 1152017233}
   - component: {fileID: 1152017232}
+  - component: {fileID: 1152017236}
   m_Layer: 5
   m_Name: NameInput
   m_TagString: Untagged
@@ -4406,14 +4411,14 @@ MonoBehaviour:
   m_VerticalScrollbarEventHandler: {fileID: 0}
   m_LayoutGroup: {fileID: 0}
   m_ScrollSensitivity: 1
-  m_ContentType: 5
+  m_ContentType: 4
   m_InputType: 0
   m_AsteriskChar: 42
-  m_KeyboardType: 0
+  m_KeyboardType: 1
   m_LineType: 0
   m_HideMobileInput: 0
   m_HideSoftKeyboard: 0
-  m_CharacterValidation: 5
+  m_CharacterValidation: 4
   m_RegexValue: 
   m_GlobalPointSize: 14
   m_CharacterLimit: 15
@@ -4515,6 +4520,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 15}
   m_SizeDelta: {x: 188.986, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1152017236
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1152017231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f820dda267cbaf640a88f53980c81807, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1153968764
 GameObject:
   m_ObjectHideFlags: 0
@@ -4723,10 +4740,10 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_NormalColor: {r: 0.6603774, g: 0.6603774, b: 0.6603774, a: 1}
+    m_HighlightedColor: {r: 0.3066038, g: 0.5924795, b: 1, a: 1}
+    m_PressedColor: {r: 0.3066038, g: 0.5924795, b: 1, a: 1}
+    m_SelectedColor: {r: 0.3066038, g: 0.5924795, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -4741,11 +4758,23 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 1218524205}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 21042769}
+        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
+        m_MethodName: StartGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1218524205
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4759,7 +4788,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4931,106 +4960,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
---- !u!1 &1408521524
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1408521529}
-  - component: {fileID: 1408521530}
-  - component: {fileID: 1408521528}
-  - component: {fileID: 1408521527}
-  - component: {fileID: 1408521525}
-  m_Layer: 5
-  m_Name: PlayScreen
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1408521525
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1408521524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0bd5b5805b78a47a6dd94ec9329a9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mainCanvas: {fileID: 1408521530}
-  alternativeCanvas: {fileID: 1889614996}
-  fadeTimeSec: 0.2
---- !u!114 &1408521527
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1408521524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0bd5b5805b78a47a6dd94ec9329a9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mainCanvas: {fileID: 1814734268}
-  alternativeCanvas: {fileID: 647222012}
-  fadeTimeSec: 0.2
---- !u!114 &1408521528
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1408521524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0bd5b5805b78a47a6dd94ec9329a9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mainCanvas: {fileID: 1759706117}
-  alternativeCanvas: {fileID: 647222012}
-  fadeTimeSec: 0.2
---- !u!224 &1408521529
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1408521524}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 647222014}
-  - {fileID: 1759706118}
-  - {fileID: 1814734269}
-  m_Father: {fileID: 306257437}
-  m_RootOrder: -1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!225 &1408521530
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1408521524}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
-  m_IgnoreParentGroups: 0
 --- !u!1 &1413704578
 GameObject:
   m_ObjectHideFlags: 0
@@ -5337,28 +5266,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1408521527}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ChangeStateByName
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 2077546456}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: JoinGame
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1556536094
@@ -5460,10 +5377,10 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_NormalColor: {r: 0.6603774, g: 0.6603774, b: 0.6603774, a: 1}
+    m_HighlightedColor: {r: 0.3066038, g: 0.5924795, b: 1, a: 1}
+    m_PressedColor: {r: 0.3066038, g: 0.5924795, b: 1, a: 1}
+    m_SelectedColor: {r: 0.3066038, g: 0.5924795, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -5483,9 +5400,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 21042769}
         m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
-        m_MethodName: CloseOnlineGame
+        m_MethodName: LeaveLobby
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5495,28 +5412,16 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1408521525}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
       - m_Target: {fileID: 2077546458}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ChangeStateByName
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Buttons
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1643843222
@@ -5532,7 +5437,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 0.6603774, g: 0.6603774, b: 0.6603774, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5640,16 +5545,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1408521527}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ChangeStateByName
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Buttons
           m_BoolArgument: 1
         m_CallState: 2
 --- !u!114 &1713571234
@@ -5835,6 +5740,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1759706118}
   - component: {fileID: 1759706117}
+  - component: {fileID: 1759706119}
   m_Layer: 5
   m_Name: HostGameInput
   m_TagString: Untagged
@@ -5861,7 +5767,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1759706116}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -5869,7 +5775,7 @@ RectTransform:
   - {fileID: 699681957}
   - {fileID: 1034575059}
   - {fileID: 22537269}
-  m_Father: {fileID: 1408521529}
+  m_Father: {fileID: 306257437}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -5877,6 +5783,58 @@ RectTransform:
   m_AnchoredPosition: {x: 0.000015259, y: -0.0011902}
   m_SizeDelta: {x: 495.25, y: 305.94}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1759706119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1759706116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6491bb5ea285b4c45ba03cdbc7dfb58e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nameInput: {fileID: 699681954}
+  onConfirm:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 21042769}
+        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
+        m_MethodName: ConfirmName
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 699681954}
+          m_ObjectArgumentAssemblyTypeName: TMPro.TMP_InputField, Unity.TextMeshPro
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 21042769}
+        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
+        m_MethodName: HostLobby
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ChangeStateByName
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Lobby
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1792836213
 GameObject:
   m_ObjectHideFlags: 0
@@ -6095,41 +6053,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 21042769}
-        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
-        m_MethodName: ConfirmName
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 1152017232}
-          m_ObjectArgumentAssemblyTypeName: TMPro.TMP_InputField, Unity.TextMeshPro
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 21042769}
-        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
-        m_MethodName: JoinLobby
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 546495412}
-          m_ObjectArgumentAssemblyTypeName: TMPro.TMP_InputField, Unity.TextMeshPro
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1408521525}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
+      - m_Target: {fileID: 1814734270}
+        m_TargetAssemblyTypeName: JoinGameUI, Assembly-CSharp
+        m_MethodName: TryJoinGame
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 1
+          m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1801459813
 MonoBehaviour:
@@ -6255,6 +6189,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1814734269}
   - component: {fileID: 1814734268}
+  - component: {fileID: 1814734270}
   m_Layer: 5
   m_Name: JoinGameInput
   m_TagString: Untagged
@@ -6281,7 +6216,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1814734267}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -6290,7 +6225,7 @@ RectTransform:
   - {fileID: 546495415}
   - {fileID: 1713571232}
   - {fileID: 1801459811}
-  m_Father: {fileID: 1408521529}
+  m_Father: {fileID: 306257437}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -6298,6 +6233,59 @@ RectTransform:
   m_AnchoredPosition: {x: 0.000015259, y: 0}
   m_SizeDelta: {x: 495.25, y: 305.94}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1814734270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1814734267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f8013bc562340d40ba2534b0a7dac8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nameInput: {fileID: 1152017232}
+  codeInput: {fileID: 546495412}
+  onConfirm:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ChangeStateByName
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Lobby
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 21042769}
+        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
+        m_MethodName: ConfirmName
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1152017232}
+          m_ObjectArgumentAssemblyTypeName: TMPro.TMP_InputField, Unity.TextMeshPro
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 21042769}
+        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
+        m_MethodName: JoinLobby
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 546495412}
+          m_ObjectArgumentAssemblyTypeName: TMPro.TMP_InputField, Unity.TextMeshPro
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1889614994
 GameObject:
   m_ObjectHideFlags: 0
@@ -6330,10 +6318,10 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 487690987}
-  - {fileID: 1218524203}
   - {fileID: 752361643}
   - {fileID: 1479654047}
   - {fileID: 1643843220}
+  - {fileID: 1218524203}
   m_Father: {fileID: 306257437}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -6709,9 +6697,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd713a8ff9c2634488b0e26562272a86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainCanvas: {fileID: 55986784}
-  alternativeCanvas: {fileID: 1408521530}
-  fadeTimeSec: 0.2
   background: {fileID: 1803416939}
   deck: {fileID: 2077546457}
   cellSize: {x: 100, y: 100}
@@ -6721,6 +6706,12 @@ MonoBehaviour:
   playTilePrefab: {fileID: 925260688024719224, guid: 84e5d4c34317ada42a3fa4495c67cdac, type: 3}
   howToPlayTilePrefab: {fileID: 925260688024719224, guid: 1b015f150df8b7b4bae88efb32a9fbbf, type: 3}
   centreMenuArea: {fileID: 306257437}
+  titleScreen: {fileID: 55986784}
+  buttonsScreen: {fileID: 647222012}
+  hostGameInputScreen: {fileID: 1759706117}
+  joinGameInputScreen: {fileID: 1814734268}
+  lobbyGameScreen: {fileID: 1889614996}
+  fadeTimeSec: 0.2
 --- !u!114 &2077546459
 MonoBehaviour:
   m_ObjectHideFlags: 0

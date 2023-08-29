@@ -3,7 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MenuUI : MenuTileUI
+enum MenuState
+{
+    Title,
+    Buttons,
+    HostGame,
+    JoinGame,
+    Lobby,
+}
+
+public class MenuUI : EventReceiverInstance
 {
     [SerializeField] Image background;
     [SerializeField] DeckHandler deck;
@@ -14,12 +23,41 @@ public class MenuUI : MenuTileUI
     [SerializeField] GameObject playTilePrefab;
     [SerializeField] GameObject howToPlayTilePrefab;
     [SerializeField] RectTransform centreMenuArea;
+    [SerializeField] CanvasGroup titleScreen;
+    [SerializeField] CanvasGroup buttonsScreen;
+    [SerializeField] CanvasGroup hostGameInputScreen;
+    [SerializeField] CanvasGroup joinGameInputScreen;
+    [SerializeField] CanvasGroup lobbyGameScreen;
+    [SerializeField] float fadeTimeSec = 0.5f;
+
+    private MenuState state = MenuState.Title;
+
+    private Coroutine fadeInCoroutine;
+    private Coroutine fadeOutCoroutine;
 
     private Vector2Int gridSize;
     private bool centreHighlight;
 
-    private void Start()
+    private List<CanvasGroup> stateScreens;
+
+    protected override void Start()
     {
+        base.Start();
+
+        stateScreens = new List<CanvasGroup>()
+        {
+            titleScreen,
+            buttonsScreen,
+            hostGameInputScreen,
+            joinGameInputScreen,
+            lobbyGameScreen
+        };
+
+        foreach( var screen in stateScreens )
+            screen.SetVisibility( false );
+
+        titleScreen.SetVisibility( true );
+
         var allTiles = new List<TileComponent>();
 
         var cameraRect = Camera.main.pixelRect;
@@ -91,11 +129,24 @@ public class MenuUI : MenuTileUI
 
     private void Update()
     {
-        if( centreMenuArea != null && centreHighlight != centreMenuArea.GetSceenSpaceRect().Contains( Utility.GetMouseOrTouchPos() ) )
+        if( state == MenuState.Title || state == MenuState.Buttons )
         {
-            centreHighlight = !centreHighlight;
-            ToggleFadeText( centreHighlight );
+            if( centreMenuArea != null && centreHighlight != centreMenuArea.GetSceenSpaceRect().Contains( Utility.GetMouseOrTouchPos() ) )
+            {
+                centreHighlight = !centreHighlight;
+                ToggleFadeText( 
+                    centreHighlight ? titleScreen : buttonsScreen,
+                    centreHighlight ? buttonsScreen : titleScreen );
+                state = centreHighlight ? MenuState.Buttons : MenuState.Title;
+            }
         }
+    }
+
+    public void ChangeStateByName( string stateName )
+    {
+        var newState = Utility.ParseEnum<MenuState>( stateName );
+        ToggleFadeText( stateScreens[( int )state], stateScreens[( int )newState] );
+        state = newState;
     }
 
     public void StartGame()
@@ -107,5 +158,28 @@ public class MenuUI : MenuTileUI
     {
         yield return Utility.FadeToBlack( GetComponent<CanvasGroup>(), 0.5f );
         gameObject.SetActive( false );
+    }
+
+    public override void OnEventReceived( IBaseEvent e )
+    {
+        if( e is StartGameEvent )
+        {
+            StartGame();
+        }
+    }
+
+    public void ToggleFadeText( CanvasGroup fadeOut, CanvasGroup fadeIn )
+    {
+        fadeOut.gameObject.SetActive( true );
+        fadeIn.gameObject.SetActive( true );
+
+        if( fadeInCoroutine != null )
+            StopCoroutine( fadeInCoroutine );
+
+        if( fadeOutCoroutine != null )
+            StopCoroutine( fadeOutCoroutine );
+
+        fadeInCoroutine = StartCoroutine( Utility.FadeFromBlack( fadeIn, fadeTimeSec ) );
+        fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec ) );
     }
 }
