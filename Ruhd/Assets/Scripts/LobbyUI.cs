@@ -11,7 +11,7 @@ public class LobbyUI : EventReceiverInstance
         if( e is LobbyUpdatedEvent lobbyUpdated )
         {
             codeLabel.text = lobbyUpdated.lobby.LobbyCode;
-            playersLabel.text = string.Join( "\n", lobbyUpdated.lobby.Players.Select( x => x.Data["PlayerName"].Value ) );
+            playersLabel.text = string.Join( "\n", lobbyUpdated.playerNames );
         }
     }
 }

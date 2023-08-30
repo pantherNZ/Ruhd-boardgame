@@ -26,9 +26,9 @@ public class ScoresHandler : EventReceiverInstance
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is LobbyUpdatedEvent lobbyUpdated )
+        if( e is StartGameEvent startGame )
         {
-            InitPlayers( lobbyUpdated.lobby.Players.Select( x => x.Data["PlayerName"].Value ).ToList() );
+            InitPlayers( startGame.playerNames );
         }
         else if( e is PlayerScoreEvent scoreEvent )
         {

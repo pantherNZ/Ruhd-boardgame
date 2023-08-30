@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using Unity.Services.Lobbies.Models;
 
 class TileSelectedEvent : IBaseEvent
@@ -17,9 +18,15 @@ class TilePlacedEvent : IBaseEvent
     public bool successfullyPlaced;
 }
 
+class TurnStartEvent : IBaseEvent
+{
+    public string player = null;
+}
+
 class LobbyUpdatedEvent : IBaseEvent
 {
     public Lobby lobby;
+    public List<string> playerNames;
 }
 
 class PlayerScoreEvent : IBaseEvent
@@ -30,4 +37,5 @@ class PlayerScoreEvent : IBaseEvent
 
 class StartGameEvent : IBaseEvent
 {
+    public List<string> playerNames;
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -62,7 +63,11 @@ public class NetworkHandler : MonoBehaviour
                 Player = CreateNetworkPlayerData(),
             };
             lobby = await LobbyService.Instance.CreateLobbyAsync( localPlayerName, 4, lobbyOptions );
-            EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() { lobby = lobby } );
+            EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() 
+            { 
+                lobby = lobby,
+                playerNames = GetPlayerNames()
+            } );
             lobbyHeartbeatCoroutine = StartCoroutine( SendLobbyHeartbeat() );
             lobbyPollCoroutine = StartCoroutine( PollLobbyUpdates() );
         }
@@ -82,6 +87,8 @@ public class NetworkHandler : MonoBehaviour
 
         if( lobby != null )
             await LobbyService.Instance.RemovePlayerAsync( lobby.Id, AuthenticationService.Instance.PlayerId );
+
+        lobby = null;
     }
 
     public async void JoinLobby( TMPro.TMP_InputField code )
@@ -124,19 +131,28 @@ public class NetworkHandler : MonoBehaviour
             {
                 lastLobbyUpdate = lobby.LastUpdated;
 
-                EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() { lobby = lobby } );
+                EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() 
+                { 
+                    lobby = lobby,
+                    playerNames = GetPlayerNames()
+                } );
 
                 if( lobby.Data != null && lobby.Data.TryGetValue( "StartGame", out var joinCode ) )
                 {
-                    StopCoroutine( lobbyHeartbeatCoroutine );
-                    var isHost = lobby.HostId == AuthenticationService.Instance.PlayerId;
-                    lobby = null;
-                    if( !isHost )
+                    if( lobbyHeartbeatCoroutine != null )
+                        StopCoroutine( lobbyHeartbeatCoroutine );
+                    if( lobby.HostId != AuthenticationService.Instance.PlayerId )
                         StartGameClient( joinCode.Value );
+                    lobby = null;
                     break;
                 }
             }
         }
+    }
+
+    private List<string> GetPlayerNames()
+    {
+        return lobby.Players.Select( x => x.Data["PlayerName"].Value ).ToList();
     }
 
     public async void StartGame()
@@ -163,7 +179,7 @@ public class NetworkHandler : MonoBehaviour
             if( lobbyPollCoroutine != null )
                 StopCoroutine( lobbyPollCoroutine );
 
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() {} );
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerNames = GetPlayerNames() } );
         }
         catch( RelayServiceException e )
         {
@@ -175,12 +191,13 @@ public class NetworkHandler : MonoBehaviour
     {
         try
         {
+            var playerNames = GetPlayerNames(); // Must be done before leaving lobby
             LeaveLobby();
             var allocation = await RelayService.Instance.JoinAllocationAsync( relayJoinCode );
             var serverData = new RelayServerData( allocation, "dtls" );
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
             NetworkManager.Singleton.StartClient();
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() {} );
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerNames = playerNames } );
         }
         catch( RelayServiceException e )
         {

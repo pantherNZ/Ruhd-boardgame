@@ -11,12 +11,14 @@ public class BoardHandler : EventReceiverInstance
     [SerializeField] Vector2 cellSize;
     [SerializeField] Vector2 padding;
     [SerializeField] Image highlightTilePrefab;
-    Dictionary<Vector2Int, TileComponent> board;
-    Dictionary<Vector2Int, TileComponent> flipped;
-    Dictionary<Vector2Int, Image> highlights;
-    int boardSize;
-    bool placementAction = true; // False means flip tile action
-    Vector2Int? lastPlaced;
+    private Dictionary<Vector2Int, TileComponent> board;
+    private Dictionary<Vector2Int, TileComponent> flipped;
+    private Dictionary<Vector2Int, Image> highlights;
+    private int boardSize;
+    private bool placementAction = true; // False means flip tile action
+    private string currentPlayerturn;
+    private List<string> players;
+    private Vector2Int? lastPlaced;
 
     static readonly Vector2Int[] directions = new Vector2Int[]
     {
@@ -98,6 +100,12 @@ public class BoardHandler : EventReceiverInstance
 
     private void NextTurnStage()
     {
+        if( !placementAction )
+        {
+            currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
+            EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
+        }
+
         placementAction = !placementAction;
 
         foreach( var tile in flipped.Values )
@@ -254,6 +262,12 @@ public class BoardHandler : EventReceiverInstance
         {
             TryPlaceTile( 0, tilePlacedEvent.tile );
             RemoveHighlights();
+        }
+        else if( e is StartGameEvent startGame )
+        {
+            players = startGame.playerNames;
+            currentPlayerturn = players[0]; // Assume 0 is the host/first player, maybe randomise?
+            EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
         }
     }
 
