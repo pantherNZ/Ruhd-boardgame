@@ -45,6 +45,11 @@ public class DeckHandler : EventReceiverInstance
         return openHand.IsEmpty();
     }
 
+    public TileComponent FindTileInOpenHand( TileNetworkData tile )
+    {
+        return openHand.Find( x => x.networkData == tile );
+    }
+
     public TileComponent DrawTile( bool randomRotation )
     {
         var cardData = allTiles.PopBack();
@@ -65,6 +70,7 @@ public class DeckHandler : EventReceiverInstance
     public void DrawCardToOpenHand()
     {
         var newCard = DrawTile( true );
+        newCard.SetData( TileSource.Hand, new Vector2Int( openHand.Count, 0 ) );
         openHand.Add( newCard );
         newCard.transform.SetParent( slotsPanelUI.transform, false );
     }

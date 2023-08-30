@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 15069649}
   - component: {fileID: 15069651}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: StatusLabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2397,7 +2397,7 @@ MonoBehaviour:
   m_CharacterValidation: 4
   m_RegexValue: 
   m_GlobalPointSize: 14
-  m_CharacterLimit: 5
+  m_CharacterLimit: 6
   m_OnEndEdit:
     m_PersistentCalls:
       m_Calls: []
@@ -2597,6 +2597,7 @@ GameObject:
   - component: {fileID: 576484567}
   - component: {fileID: 576484566}
   - component: {fileID: 576484568}
+  - component: {fileID: 576484569}
   m_Layer: 5
   m_Name: Board
   m_TagString: Untagged
@@ -2681,6 +2682,23 @@ MonoBehaviour:
   cellSize: {x: 100, y: 100}
   padding: {x: 10, y: 10}
   highlightTilePrefab: {fileID: 616335228638513208, guid: 583965e6d98e5e741bb2fbfc56312f95, type: 3}
+  deckHandler: {fileID: 235360807}
+--- !u!114 &576484569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 576484564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 4242548219
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!1 &647222011
 GameObject:
   m_ObjectHideFlags: 0

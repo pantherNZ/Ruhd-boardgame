@@ -32,9 +32,9 @@ public class ScoresHandler : EventReceiverInstance
         }
         else if( e is PlayerScoreEvent scoreEvent )
         {
-            var player = players.Find( x => x.playerIdx == scoreEvent.playerIdx );
+            var player = players.Find( x => x.name == scoreEvent.player );
             player.score += scoreEvent.scoreModifier;
-            player.scoreText.text = players[scoreEvent.playerIdx].score.ToString();
+            player.scoreText.text = player.score.ToString();
         }
     }
 

@@ -2,8 +2,9 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Netcode;
 
-public class BoardHandler : EventReceiverInstance
+public class BoardHandler : NetworkBehaviour, IEventReceiver
 {
     [SerializeField] GameConstants constants;
     [SerializeField] RectTransform grid;
@@ -11,6 +12,7 @@ public class BoardHandler : EventReceiverInstance
     [SerializeField] Vector2 cellSize;
     [SerializeField] Vector2 padding;
     [SerializeField] Image highlightTilePrefab;
+    [SerializeField] DeckHandler deckHandler;
     private Dictionary<Vector2Int, TileComponent> board;
     private Dictionary<Vector2Int, TileComponent> flipped;
     private Dictionary<Vector2Int, Image> highlights;
@@ -28,9 +30,9 @@ public class BoardHandler : EventReceiverInstance
         new Vector2Int( -1, 0 ),
     };
 
-    protected override void Start()
+    protected void Start()
     {
-        base.Start();
+        EventSystem.Instance.AddSubscriber( this );
 
         boardSize = Mathf.Min(
             Mathf.FloorToInt( grid.rect.width / cellSize.x ),
@@ -48,7 +50,7 @@ public class BoardHandler : EventReceiverInstance
         PlaceTile( new Vector2Int( 1, 1 ), deck.DrawTile( true ) );
     }
 
-    private bool TryPlaceTile( int playerIdx, TileComponent tile )
+    private bool TryPlaceTile( TileComponent tile )
     {
         var gridPos = GetGridPosition( grid.worldToLocalMatrix.MultiplyPoint( tile.transform.position ) );
         bool validPlacement = IsAvailableSpot( gridPos );
@@ -72,7 +74,7 @@ public class BoardHandler : EventReceiverInstance
             else
             {
                 tile.ShowBack();
-                AddToGrid( found.Key, tile );
+                SetPositionOnGrid( found.Key, tile );
             }
         }
         
@@ -86,7 +88,7 @@ public class BoardHandler : EventReceiverInstance
             {
                 EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
                 {
-                    playerIdx = playerIdx,
+                    player = currentPlayerturn,
                     scoreModifier = gainedScore,
                 } );
             }
@@ -114,7 +116,7 @@ public class BoardHandler : EventReceiverInstance
 
     private void PlaceTile( Vector2Int pos, TileComponent tile )
     {
-        AddToGrid( pos, tile );
+        SetPositionOnGrid( pos, tile );
         tile.SetInteractable( false );
 
         if( placementAction )
@@ -129,8 +131,9 @@ public class BoardHandler : EventReceiverInstance
         }
     }
 
-    private void AddToGrid( Vector2Int pos, TileComponent tile )
+    private void SetPositionOnGrid( Vector2Int pos, TileComponent tile )
     {
+        tile.SetData( TileSource.Board, pos );
         tile.transform.SetParent( grid, false );
         tile.transform.localPosition = GetPositionOnGrid( pos );
     }
@@ -249,7 +252,7 @@ public class BoardHandler : EventReceiverInstance
         highlights = null;
     }
 
-    public override void OnEventReceived( IBaseEvent e )
+    void IEventReceiver.OnEventReceived( IBaseEvent e )
     {
         if( e is TileSelectedEvent tileSelected )
         {
@@ -260,8 +263,7 @@ public class BoardHandler : EventReceiverInstance
         }
         else if( e is TileDroppedEvent tilePlacedEvent )
         {
-            TryPlaceTile( 0, tilePlacedEvent.tile );
-            RemoveHighlights();
+            TileDropped( tilePlacedEvent );
         }
         else if( e is StartGameEvent startGame )
         {
@@ -269,6 +271,37 @@ public class BoardHandler : EventReceiverInstance
             currentPlayerturn = players[0]; // Assume 0 is the host/first player, maybe randomise?
             EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
         }
+    }
+
+    private TileComponent FindTileFromNetworkData( TileNetworkData data )
+    {
+        Debug.Assert( data.source != TileSource.Deck );
+        if( data.source == TileSource.Hand )
+            return deckHandler.FindTileInOpenHand( data );
+        else if( data.flipped )
+            return flipped[data.location];
+        else
+            return board[data.location];
+    }
+
+    private void TileDropped( TileDroppedEvent tilePlacedEvent )
+    {
+        RemoveHighlights();
+        TileDroppedRequestServerRpc( tilePlacedEvent.tile.networkData );
+    }
+
+    [ServerRpc]
+    private void TileDroppedRequestServerRpc( TileNetworkData tile )
+    {
+        if( TryPlaceTile( FindTileFromNetworkData( tile ) ) )
+            TileDroppedClientRpc( tile );
+    }
+
+    [ClientRpc]
+    private void TileDroppedClientRpc( TileNetworkData tile )
+    {
+        if( !NetworkManager.Singleton.IsHost && !NetworkManager.Singleton.IsServer )
+            TryPlaceTile( FindTileFromNetworkData( tile ) );
     }
 
     public int EvaluateScore( Vector2Int pos, TileComponent newCard )

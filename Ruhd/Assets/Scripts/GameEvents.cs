@@ -31,7 +31,7 @@ class LobbyUpdatedEvent : IBaseEvent
 
 class PlayerScoreEvent : IBaseEvent
 {
-    public int playerIdx;
+    public string player;
     public int scoreModifier;
 }
 
