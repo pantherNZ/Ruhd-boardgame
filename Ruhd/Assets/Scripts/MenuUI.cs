@@ -149,9 +149,20 @@ public class MenuUI : EventReceiverInstance
         state = newState;
     }
 
-    public void StartGame()
+    public void StartGame(bool vsComputer)
     {
         StartCoroutine( HideMenu() );
+
+        // If vsing PC, we need to manually call the start game event
+        if( vsComputer )
+        {
+            var names = new List<string>()
+            {
+                "Player",
+                "AI"
+            };
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerNames = names }, this );
+        }
     }
 
     private IEnumerator HideMenu()
@@ -164,7 +175,7 @@ public class MenuUI : EventReceiverInstance
     {
         if( e is StartGameEvent )
         {
-            StartGame();
+            StartGame( false );
         }
     }
 

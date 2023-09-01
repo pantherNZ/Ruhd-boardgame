@@ -12,13 +12,12 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     [SerializeField] Vector2 cellSize;
     [SerializeField] Vector2 padding;
     [SerializeField] Image highlightTilePrefab;
-    [SerializeField] DeckHandler deckHandler;
     private Dictionary<Vector2Int, TileComponent> board;
     private Dictionary<Vector2Int, TileComponent> flipped;
     private Dictionary<Vector2Int, Image> highlights;
     private int boardSize;
-    private bool placementAction = true; // False means flip tile action
-    private string currentPlayerturn;
+    [SerializeField] bool placementAction = true; // False means flip tile action
+    [SerializeField] string currentPlayerturn;
     private List<string> players;
     private Vector2Int? lastPlaced;
 
@@ -50,9 +49,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         PlaceTile( new Vector2Int( 1, 1 ), deck.DrawTile( true ) );
     }
 
-    private bool TryPlaceTile( TileComponent tile )
+    private bool TryPlaceTile( TileComponent tile, Vector2Int gridPos )
     {
-        var gridPos = GetGridPosition( grid.worldToLocalMatrix.MultiplyPoint( tile.transform.position ) );
         bool validPlacement = IsAvailableSpot( gridPos );
 
         EventSystem.Instance.TriggerEvent( new TilePlacedEvent()
@@ -277,7 +275,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     {
         Debug.Assert( data.source != TileSource.Deck );
         if( data.source == TileSource.Hand )
-            return deckHandler.FindTileInOpenHand( data );
+            return deck.FindTileInOpenHand( data );
         else if( data.flipped )
             return flipped[data.location];
         else
@@ -287,21 +285,26 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private void TileDropped( TileDroppedEvent tilePlacedEvent )
     {
         RemoveHighlights();
-        TileDroppedRequestServerRpc( tilePlacedEvent.tile.networkData );
+        var gridPos = GetGridPosition( grid.worldToLocalMatrix.MultiplyPoint( tilePlacedEvent.tile.transform.position ) );
+        
+        if( NetworkManager.Singleton.LocalClient != null )
+            TileDroppedRequestServerRpc( tilePlacedEvent.tile.networkData, gridPos );
+        else
+            TryPlaceTile( tilePlacedEvent.tile, gridPos );
     }
 
     [ServerRpc]
-    private void TileDroppedRequestServerRpc( TileNetworkData tile )
+    private void TileDroppedRequestServerRpc( TileNetworkData tile, Vector2Int gridPos )
     {
-        if( TryPlaceTile( FindTileFromNetworkData( tile ) ) )
-            TileDroppedClientRpc( tile );
+        if( TryPlaceTile( FindTileFromNetworkData( tile ), gridPos ) )
+            TileDroppedClientRpc( tile, gridPos );
     }
 
     [ClientRpc]
-    private void TileDroppedClientRpc( TileNetworkData tile )
+    private void TileDroppedClientRpc( TileNetworkData tile, Vector2Int gridPos )
     {
         if( !NetworkManager.Singleton.IsHost && !NetworkManager.Singleton.IsServer )
-            TryPlaceTile( FindTileFromNetworkData( tile ) );
+            TryPlaceTile( FindTileFromNetworkData( tile ), gridPos );
     }
 
     public int EvaluateScore( Vector2Int pos, TileComponent newCard )
