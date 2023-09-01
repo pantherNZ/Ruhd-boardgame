@@ -125,10 +125,15 @@ public class TileComponent : MonoBehaviour
             flipped = false;
     }
 
+    private bool NetworkTurnCheck()
+    {
+        return !localPlayerController || localPlayerController.isPlayerTurn;
+    }
+
     public void OnDragStart()
     {
         // Can only move when it's the local players turn
-        if( !localPlayerController.isPlayerTurn )
+        if( !NetworkTurnCheck() )
             return;
 
         draggableCmp.StartDrag();
@@ -139,7 +144,7 @@ public class TileComponent : MonoBehaviour
     public void OnDragEnd()
     {
         // Can only move when it's the local players turn
-        if( !localPlayerController.isPlayerTurn )
+        if( !NetworkTurnCheck() )
             return;
 
         draggableCmp.EndDrag();
@@ -149,12 +154,12 @@ public class TileComponent : MonoBehaviour
 
     private void Update()
     {
-        if( localPlayerController == null )
-            localPlayerController = NetworkManager.Singleton?.LocalClient?.PlayerObject?.GetComponent<PlayerController>();
+        if( localPlayerController == null && NetworkManager.Singleton && NetworkManager.Singleton.LocalClient != null )
+            localPlayerController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerController>();
 
         if( dragging )
         {
-            if( localPlayerController.isPlayerTurn && rotationInterp == null && Mathf.Abs( Input.mouseScrollDelta.y ) > 0.001f )
+            if( NetworkTurnCheck() && rotationInterp == null && Mathf.Abs( Input.mouseScrollDelta.y ) > 0.001f )
             {
                 SetRotation( ( Side )Utility.Mod( ( int )rotation + Mathf.RoundToInt( Mathf.Sign( Input.mouseScrollDelta.y ) ), 4 ), true );
             }
