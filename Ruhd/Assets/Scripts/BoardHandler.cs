@@ -293,15 +293,15 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             TryPlaceTile( tilePlacedEvent.tile, gridPos );
     }
 
-    [ServerRpc]
-    private void TileDroppedRequestServerRpc( TileNetworkData tile, Vector2Int gridPos )
+    [ServerRpc( RequireOwnership = false )]
+    private void TileDroppedRequestServerRpc( TileNetworkData tile, Vector2Int gridPos, ServerRpcParams rpcParams = default )
     {
         if( TryPlaceTile( FindTileFromNetworkData( tile ), gridPos ) )
             TileDroppedClientRpc( tile, gridPos );
     }
 
     [ClientRpc]
-    private void TileDroppedClientRpc( TileNetworkData tile, Vector2Int gridPos )
+    private void TileDroppedClientRpc( TileNetworkData tile, Vector2Int gridPos, ClientRpcParams rpcParams = default )
     {
         if( !NetworkManager.Singleton.IsHost && !NetworkManager.Singleton.IsServer )
             TryPlaceTile( FindTileFromNetworkData( tile ), gridPos );

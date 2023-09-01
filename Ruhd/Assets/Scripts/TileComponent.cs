@@ -127,7 +127,8 @@ public class TileComponent : MonoBehaviour
 
     private bool NetworkTurnCheck()
     {
-        return !localPlayerController || localPlayerController.isPlayerTurn;
+        return ( !NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer ) ||
+            ( localPlayerController && localPlayerController.isPlayerTurn );
     }
 
     public void OnDragStart()
