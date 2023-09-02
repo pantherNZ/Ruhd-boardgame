@@ -254,7 +254,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     {
         if( e is TileSelectedEvent tileSelected )
         {
-            HighlightAvailableSpots();
+            if( tileSelected.showHighlights )
+                HighlightAvailableSpots();
 
             if( tileSelected.tile.flipped )
                 tileSelected.tile.ShowFront( false );
@@ -286,25 +287,44 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     {
         RemoveHighlights();
         var gridPos = GetGridPosition( grid.worldToLocalMatrix.MultiplyPoint( tilePlacedEvent.tile.transform.position ) );
-        
-        if( NetworkManager.Singleton.LocalClient != null )
+
+        // Host can just tell connected clients (including itself, directly)
+        //if( NetworkManager.Singleton.IsHost )
+        //    TileDroppedClientRpc( tilePlacedEvent.tile.networkData, gridPos );
+        // Request place tile from server
+        if( NetworkManager.Singleton.IsClient )
             TileDroppedRequestServerRpc( tilePlacedEvent.tile.networkData, gridPos );
-        else
+        else // Local code path
             TryPlaceTile( tilePlacedEvent.tile, gridPos );
+    }
+
+    private bool TryPlaceTileOtherPlayer( TileNetworkData tile, Vector2Int gridPos )
+    {
+        var tileCmp = FindTileFromNetworkData( tile );
+        if( tileCmp == null )
+            return false;
+        EventSystem.Instance.TriggerEvent( new TileSelectedEvent() { tile = tileCmp, showHighlights = false } );
+        return TryPlaceTile( tileCmp, gridPos );
     }
 
     [ServerRpc( RequireOwnership = false )]
     private void TileDroppedRequestServerRpc( TileNetworkData tile, Vector2Int gridPos, ServerRpcParams rpcParams = default )
     {
-        if( TryPlaceTile( FindTileFromNetworkData( tile ), gridPos ) )
-            TileDroppedClientRpc( tile, gridPos );
+        if( TryPlaceTileOtherPlayer( tile, gridPos ) )
+        {
+            //var clientsToSendTo = NetworkManager.Singleton.ConnectedClientsIds.ToList();
+            //clientsToSendTo.Remove( rpcParams.Receive.SenderClientId );
+            TileDroppedClientRpc( tile, gridPos );//, new ClientRpcParams() 
+            //{ 
+            //    Send = new ClientRpcSendParams() { TargetClientIds = clientsToSendTo } 
+            //} );
+        }
     }
 
     [ClientRpc]
     private void TileDroppedClientRpc( TileNetworkData tile, Vector2Int gridPos, ClientRpcParams rpcParams = default )
     {
-        if( !NetworkManager.Singleton.IsHost && !NetworkManager.Singleton.IsServer )
-            TryPlaceTile( FindTileFromNetworkData( tile ), gridPos );
+        TryPlaceTileOtherPlayer( tile, gridPos );
     }
 
     public int EvaluateScore( Vector2Int pos, TileComponent newCard )

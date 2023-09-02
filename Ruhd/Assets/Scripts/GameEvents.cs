@@ -5,6 +5,7 @@ using Unity.Services.Lobbies.Models;
 class TileSelectedEvent : IBaseEvent
 {
     public TileComponent tile;
+    public bool showHighlights;
 }
 
 class TileDroppedEvent : IBaseEvent

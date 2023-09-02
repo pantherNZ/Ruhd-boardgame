@@ -138,7 +138,7 @@ public class TileComponent : MonoBehaviour
             return;
 
         draggableCmp.StartDrag();
-        EventSystem.Instance.TriggerEvent( new TileSelectedEvent() { tile = this } );
+        EventSystem.Instance.TriggerEvent( new TileSelectedEvent() { tile = this, showHighlights = true } );
         dragging = true;
     }
 
