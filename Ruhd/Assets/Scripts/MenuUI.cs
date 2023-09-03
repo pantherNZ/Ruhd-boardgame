@@ -78,6 +78,9 @@ public class MenuUI : EventReceiverInstance
                 if( y >= -1 && y < 1 && x >= -2 && x < 2 )
                     continue;
 
+                if( deck.IsDeckEmpty() )
+                    deck.Reset();
+
                 var newPosition = GetPosition( new Vector2Int( x, y ) );
                 var tile = deck.DrawTile( true );
                 var isOutsideCamera = !cameraRect.Contains( newPosition );
@@ -88,9 +91,6 @@ public class MenuUI : EventReceiverInstance
                 rectTransform.anchorMin = new Vector2( 0.5f, 0.5f );
                 rectTransform.anchorMax = new Vector2( 0.5f, 0.5f );
                 rectTransform.anchoredPosition = newPosition;
-
-                if( deck.IsDeckEmpty() )
-                    deck.Reset();
 
                 if( y >= -2 && y < 2 && x >= -3 && x < 3 )
                     continue;
@@ -158,9 +158,11 @@ public class MenuUI : EventReceiverInstance
         {
             var names = new List<string>()
             {
-                "Player",
+                "PLAYER",
                 "AI"
             };
+
+            EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
             EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerNames = names }, this );
         }
     }

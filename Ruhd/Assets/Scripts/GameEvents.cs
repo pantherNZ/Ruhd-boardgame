@@ -36,6 +36,8 @@ class PlayerScoreEvent : IBaseEvent
     public int scoreModifier;
 }
 
+class PreStartGameEvent : IBaseEvent { }
+
 class StartGameEvent : IBaseEvent
 {
     public List<string> playerNames;

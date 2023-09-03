@@ -9,22 +9,17 @@ public class DeckHandler : EventReceiverInstance
     [SerializeField] HorizontalLayoutGroup slotsPanelUI;
     [SerializeField] TileComponent tilePrefab;
     [SerializeField] Sprite cardBackSprite;
-    private List<TileComponent> openHand;
-    private List<TileData> allTiles;
+    private List<TileComponent> openHand = new List<TileComponent>();
+    private List<TileData> allTiles = new List<TileData>();
     private int? selectedCardFromSlot;
 
     protected override void Start()
     {
         base.Start();
-
-        Reset();
     }
 
     public void Reset()
     {
-        if( constants.rngSeed != 0 )
-            Random.InitState( constants.rngSeed );
-
         openHand = new List<TileComponent>();
         allTiles = new List<TileData>();
         foreach( var card in DataHandler.GetAllCards() )
@@ -77,7 +72,11 @@ public class DeckHandler : EventReceiverInstance
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is TileSelectedEvent tileSelectedEvent )
+        if( e is StartGameEvent )
+        {
+            Reset();
+        }
+        else if( e is TileSelectedEvent tileSelectedEvent )
         {
             selectedCardFromSlot = null;
 

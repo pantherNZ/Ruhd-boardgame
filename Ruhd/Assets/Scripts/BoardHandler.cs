@@ -6,7 +6,6 @@ using Unity.Netcode;
 
 public class BoardHandler : NetworkBehaviour, IEventReceiver
 {
-    [SerializeField] GameConstants constants;
     [SerializeField] RectTransform grid;
     [SerializeField] DeckHandler deck;
     [SerializeField] Vector2 cellSize;
@@ -36,10 +35,9 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         boardSize = Mathf.Min(
             Mathf.FloorToInt( grid.rect.width / cellSize.x ),
             Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
-        Reset();
     }
 
-    private void Reset()
+    private void ResetGame( List<string> playerNames )
     {
         board = new Dictionary<Vector2Int, TileComponent>();
         flipped = new Dictionary<Vector2Int, TileComponent>();
@@ -47,6 +45,10 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         PlaceTile( new Vector2Int( 0, 0 ), deck.DrawTile( true ) );
         PlaceTile( new Vector2Int( 1, 0 ), deck.DrawTile( true ) );
         PlaceTile( new Vector2Int( 1, 1 ), deck.DrawTile( true ) );
+
+        players = playerNames;
+        currentPlayerturn = players[0]; // Assume 0 is the host/first player, maybe randomise?
+        EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
     }
 
     private bool TryPlaceTile( TileComponent tile, Vector2Int gridPos )
@@ -264,11 +266,13 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         {
             TileDropped( tilePlacedEvent );
         }
+        else if( e is PreStartGameEvent )
+        {
+            Random.InitState( GameConstants.Instance.rngSeedRuntime );
+        }
         else if( e is StartGameEvent startGame )
         {
-            players = startGame.playerNames;
-            currentPlayerturn = players[0]; // Assume 0 is the host/first player, maybe randomise?
-            EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
+            ResetGame( startGame.playerNames );
         }
     }
 
@@ -375,7 +379,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private int ScoreOneSideRule( Vector2Int pos )
     {
         int sides = Utility.GetEnumValues<Side>().Sum( side => GetAdjacentSide( pos, side ) != null ? 1 : 0 );
-        return sides == 1 ? constants.oneSideExtraScore : 0;
+        return sides == 1 ? GameConstants.Instance.oneSideExtraScore : 0;
     }
 
     private int ScoreDiffRuleSide( Vector2Int pos, Side direction )
@@ -412,7 +416,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
         bool valueMatch = true;
         bool colourMatch = true;
-        for( int i = 1; i < constants.patternLengthMin; ++i )
+        for( int i = 1; i < GameConstants.Instance.patternLengthMin; ++i )
         {
             var next = GetCurrentSide( pos + direction * i, side );
             if( next == null )
@@ -439,7 +443,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             }
         }
 
-        return constants.patternExtraScore;
+        return GameConstants.Instance.patternExtraScore;
     }
 
     private int ScorePatternRule( Vector2Int pos, bool consumePatterns )

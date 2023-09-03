@@ -4,6 +4,7 @@
 public class GameConstants : ScriptableObject
 {
     public int rngSeed = 0; // 0 means non-fixed/random
+    public int rngSeedRuntime = 0;
     public int deckNumStartingCards = 4;
     public int oneSideExtraScore = 1;
     public int patternExtraScore = 2;
@@ -24,6 +25,9 @@ public class GameConstants : ScriptableObject
                     Debug.LogError( "Multiple GameConstants scriptable object instances exist (should only be one)" );
                 else
                     _Instance = instances[0];
+
+                // Init data
+                _Instance.rngSeedRuntime = _Instance.rngSeed == 0 ? Random.Range( 0, int.MaxValue ) : _Instance.rngSeed;
             }
             return _Instance;
         }
