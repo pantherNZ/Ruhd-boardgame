@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
@@ -14,14 +15,22 @@ using UnityEngine;
 
 public class NetworkHandler : MonoBehaviour
 {
-    public string localPlayerName;
+    public struct PlayerData
+    {
+        public string name;
+        public bool isReady;
+    }
+
+    public PlayerData localPlayerData;
+
     private Lobby lobby;
+    private ILobbyEvents lobbyEventsListener;
     private Coroutine lobbyHeartbeatCoroutine;
-    private Coroutine lobbyPollCoroutine;
     private DateTime lastLobbyUpdate;
 
     const string RngSeedKey = "RngSeed";
     const string PlayerNameKey = "PlayerName";
+    const string PlayerReadyKey = "PlayerReady";
     const string StartGameKey = "StartGame";
     const string RelayConnectionType = "dtls";
 
@@ -54,52 +63,65 @@ public class NetworkHandler : MonoBehaviour
 
     public void ConfirmName( TMPro.TMP_InputField input )
     {
-        localPlayerName = input.text;
+        localPlayerData.name = input.text;
     }
 
-    private Player CreateNetworkPlayerData()
+    private Player CreateNetworkPlayer()
     {
         return new Player()
         {
-            Data = new Dictionary<string, PlayerDataObject>()
-            {
-                { PlayerNameKey, new PlayerDataObject( PlayerDataObject.VisibilityOptions.Member, localPlayerName ) }
-            }
+            Data = CreateNetworkPlayerData()
         };
+    }
+
+    private Dictionary<string, PlayerDataObject> CreateNetworkPlayerData()
+    {
+        var data = new Dictionary<string, PlayerDataObject>
+        {
+            { PlayerNameKey, new PlayerDataObject( PlayerDataObject.VisibilityOptions.Member, localPlayerData.name ) },
+            { PlayerReadyKey, new PlayerDataObject( PlayerDataObject.VisibilityOptions.Member, localPlayerData.isReady ? "READY" : null ) }
+        };
+        return data;
     }
 
     private Dictionary<string, DataObject> CreateLobbyData( string gameStartJoinCode )
     {
-        var data = new Dictionary<string, DataObject>();
-        data.Add( RngSeedKey, new DataObject( DataObject.VisibilityOptions.Member, GameConstants.Instance.rngSeed.ToString() ) );
+        var data = new Dictionary<string, DataObject>
+        {
+            { RngSeedKey, new DataObject( DataObject.VisibilityOptions.Member, GameConstants.Instance.rngSeed.ToString() ) }
+        };
         if( gameStartJoinCode != null )
             data.Add( StartGameKey, new DataObject( DataObject.VisibilityOptions.Member, gameStartJoinCode ) );
         return data;
     }
 
-    public async void HostLobby()
+    public async Task<LobbyServiceException> HostLobby( string name )
     {
+        localPlayerData.name = name;
+
         try
         {
             var lobbyOptions = new CreateLobbyOptions()
             {
                 IsPrivate = true,
-                Player = CreateNetworkPlayerData(),
+                Player = CreateNetworkPlayer(),
                 Data = CreateLobbyData( null )
             };
 
-            lobby = await LobbyService.Instance.CreateLobbyAsync( localPlayerName, 4, lobbyOptions );
+            lobby = await LobbyService.Instance.CreateLobbyAsync( localPlayerData.name, 4, lobbyOptions );
             EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() 
             { 
                 lobby = lobby,
-                playerNames = GetPlayerNames()
+                playerData = GetPlayerData()
             } );
             lobbyHeartbeatCoroutine = StartCoroutine( SendLobbyHeartbeat() );
-            lobbyPollCoroutine = StartCoroutine( PollLobbyUpdates() );
+            ListenForLobbyUpdates();
+            return null;
         }
         catch( LobbyServiceException e )
         {
             Debug.LogError( e );
+            return e;
         }
     }
 
@@ -108,31 +130,79 @@ public class NetworkHandler : MonoBehaviour
         if( lobbyHeartbeatCoroutine != null )
             StopCoroutine( lobbyHeartbeatCoroutine );
 
-        if( lobbyPollCoroutine != null )
-            StopCoroutine( lobbyPollCoroutine );
+        if( lobbyEventsListener != null )
+            await lobbyEventsListener.UnsubscribeAsync();
 
         if( lobby != null )
-            await LobbyService.Instance.RemovePlayerAsync( lobby.Id, AuthenticationService.Instance.PlayerId );
+        {
+            try
+            {
+                if( AuthenticationService.Instance.PlayerId == lobby.Id )
+                    await LobbyService.Instance.DeleteLobbyAsync( lobby.Id );
+                else
+                    await LobbyService.Instance.RemovePlayerAsync( lobby.Id, AuthenticationService.Instance.PlayerId );
+            }
+            catch( LobbyServiceException )
+            {
+                // This is valid to fail, as server will close lobby forcefully when game starts
+            }
+        }
 
         lobby = null;
     }
 
-    public async void JoinLobby( TMPro.TMP_InputField code )
+    public async void ToggleReadyForGame()
     {
+        localPlayerData.isReady = !localPlayerData.isReady;
+
+        try
+        {
+            var updateOptions = new UpdatePlayerOptions()
+            {
+                Data = CreateNetworkPlayerData()
+            };
+
+            lobby = await Lobbies.Instance.UpdatePlayerAsync( lobby.Id, AuthenticationService.Instance.PlayerId, updateOptions );
+
+            EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent()
+            {
+                lobby = lobby,
+                playerData = GetPlayerData(),
+            } );
+        }
+        catch( LobbyServiceException e )
+        {
+            if( e.Reason != LobbyExceptionReason.LobbyNotFound )
+                Debug.LogError( e );
+        }
+    }
+
+    public async Task<LobbyServiceException> JoinLobby( string code, string name )
+    {
+        localPlayerData.name = name;
+
         try
         {
             var joinOptions = new JoinLobbyByCodeOptions()
             {
-                Player = CreateNetworkPlayerData()
+                Player = CreateNetworkPlayer()
             };
 
-            lobby = await Lobbies.Instance.JoinLobbyByCodeAsync( code.text, joinOptions );
-            lobbyPollCoroutine = StartCoroutine( PollLobbyUpdates() );
+            lobby = await Lobbies.Instance.JoinLobbyByCodeAsync( code, joinOptions );
+            EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent()
+            {
+                lobby = lobby,
+                playerData = GetPlayerData(),
+            } );
+            ListenForLobbyUpdates();
             GameConstants.Instance.rngSeedRuntime = int.Parse( lobby.Data[RngSeedKey].Value );
+            return null;
         }
         catch( LobbyServiceException e )
         {
-            Debug.LogError( e );
+            if( e.Reason != LobbyExceptionReason.LobbyNotFound )
+                Debug.LogError( e );
+            return e;
         }
     }
 
@@ -146,41 +216,83 @@ public class NetworkHandler : MonoBehaviour
         }
     }
 
-    private IEnumerator PollLobbyUpdates()
+    private async void ListenForLobbyUpdates()
     {
-        while( true )
+        var callbacks = new LobbyEventCallbacks();
+        callbacks.LobbyChanged += OnLobbyChanged;
+        callbacks.KickedFromLobby += OnKickedFromLobby;
+        callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
+        try
         {
-            yield return new WaitForSeconds( 2.0f );
-            var getLobbytask = LobbyService.Instance.GetLobbyAsync( lobby.Id );
-            yield return new WaitUntil( () => getLobbytask.IsCompleted );
-            lobby = getLobbytask.Result;
-
-            if( lobby.LastUpdated > lastLobbyUpdate )
+            lobbyEventsListener = await Lobbies.Instance.SubscribeToLobbyEventsAsync( lobby.Id, callbacks );
+        }
+        catch( LobbyServiceException ex )
+        {
+            switch( ex.Reason )
             {
-                lastLobbyUpdate = lobby.LastUpdated;
-
-                EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() 
-                { 
-                    lobby = lobby,
-                    playerNames = GetPlayerNames()
-                } );
-
-                if( lobby.Data != null && lobby.Data.TryGetValue( StartGameKey, out var joinCode ) )
-                {
-                    if( lobbyHeartbeatCoroutine != null )
-                        StopCoroutine( lobbyHeartbeatCoroutine );
-                    if( lobby.HostId != AuthenticationService.Instance.PlayerId )
-                        StartGameClient( joinCode.Value );
-                    lobby = null;
-                    break;
-                }
+                case LobbyExceptionReason.AlreadySubscribedToLobby: Debug.LogWarning( $"Already subscribed to lobby[{lobby.Id}]. We did not need to try and subscribe again. Exception Message: {ex.Message}" ); break;
+                case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy: Debug.LogError( $"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {ex.Message}" ); throw;
+                case LobbyExceptionReason.LobbyEventServiceConnectionError: Debug.LogError( $"Failed to connect to lobby events. Exception Message: {ex.Message}" ); throw;
+                default: throw;
             }
         }
     }
 
-    private List<string> GetPlayerNames()
+    private void OnLobbyChanged( ILobbyChanges changes )
     {
-        return lobby.Players.Select( x => x.Data[PlayerNameKey].Value ).ToList();
+        if( changes.LobbyDeleted )
+        {
+            LeaveLobby();
+        }
+        else
+        {
+            changes.ApplyToLobby( lobby );
+
+            EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent()
+            {
+                lobby = lobby,
+                playerData = GetPlayerData(),
+            } );
+
+            if( lobby.Data != null && lobby.Data.TryGetValue( StartGameKey, out var joinCode ) )
+            {
+                if( lobby.HostId != AuthenticationService.Instance.PlayerId )
+                    StartGameClient( joinCode.Value );
+                LeaveLobby();
+            }
+        }
+    }
+
+    private void OnKickedFromLobby()
+    {
+        // These events will never trigger again, so let’s remove it.
+        lobbyEventsListener = null;
+        // Refresh the UI in some way
+    }
+
+    private void OnLobbyEventConnectionStateChanged( LobbyEventConnectionState state )
+    {
+        switch( state )
+        {
+            case LobbyEventConnectionState.Unsubscribed: /* Update the UI if necessary, as the subscription has been stopped. */ break;
+            case LobbyEventConnectionState.Subscribing: /* Update the UI if necessary, while waiting to be subscribed. */ break;
+            case LobbyEventConnectionState.Subscribed: /* Update the UI if necessary, to show subscription is working. */ break;
+            case LobbyEventConnectionState.Unsynced: /* Update the UI to show connection problems. Lobby will attempt to reconnect automatically. */ break;
+            case LobbyEventConnectionState.Error: /* Update the UI to show the connection has errored. Lobby will not attempt to reconnect as something has gone wrong. */
+            default: break;
+        }
+    }
+
+    private List<PlayerData> GetPlayerData()
+    {
+        return lobby.Players.Select( x =>
+        {
+            return new PlayerData()
+            {
+                name = x.Data[PlayerNameKey].Value,
+                isReady = x.Data[PlayerReadyKey].Value != null,
+            };
+        } ).ToList();
     }
 
     public async void StartGame()
@@ -201,11 +313,9 @@ public class NetworkHandler : MonoBehaviour
             if( lobbyHeartbeatCoroutine != null )
                 StopCoroutine( lobbyHeartbeatCoroutine );
 
-            if( lobbyPollCoroutine != null )
-                StopCoroutine( lobbyPollCoroutine );
-
             EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerNames = GetPlayerNames() } );
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerData = GetPlayerData() } );
+            Utility.FunctionTimer.CreateTimer( 5.0f, LeaveLobby );
         }
         catch( RelayServiceException e )
         {
@@ -217,7 +327,7 @@ public class NetworkHandler : MonoBehaviour
     {
         try
         {
-            var playerNames = GetPlayerNames(); // Must be done before leaving lobby
+            var playerData = GetPlayerData(); // Must be done before leaving lobby
             LeaveLobby();
             var allocation = await RelayService.Instance.JoinAllocationAsync( relayJoinCode );
             var serverData = new RelayServerData( allocation, RelayConnectionType );
@@ -225,7 +335,7 @@ public class NetworkHandler : MonoBehaviour
             NetworkManager.Singleton.StartClient();
 
             EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerNames = playerNames } );
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerData = playerData } );
         }
         catch( RelayServiceException e )
         {

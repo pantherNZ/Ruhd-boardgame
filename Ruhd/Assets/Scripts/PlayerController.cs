@@ -25,7 +25,7 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
     {
         if( e is TurnStartEvent turnStart )
         {
-            isPlayerTurn = turnStart.player == networkHandler.localPlayerName;
+            isPlayerTurn = turnStart.player == networkHandler.localPlayerData.name;
         }
     }
 }

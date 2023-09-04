@@ -272,7 +272,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         }
         else if( e is StartGameEvent startGame )
         {
-            ResetGame( startGame.playerNames );
+            ResetGame( startGame.playerData.Select( x => x.name ).ToList() );
         }
     }
 

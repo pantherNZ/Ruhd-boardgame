@@ -28,7 +28,7 @@ public class ScoresHandler : EventReceiverInstance
     {
         if( e is StartGameEvent startGame )
         {
-            InitPlayers( startGame.playerNames );
+            InitPlayers( startGame.playerData );
         }
         else if( e is PlayerScoreEvent scoreEvent )
         {
@@ -38,7 +38,7 @@ public class ScoresHandler : EventReceiverInstance
         }
     }
 
-    public void InitPlayers(List<string> playerNames )
+    public void InitPlayers(List<NetworkHandler.PlayerData> playerData )
     {
         if( players != null )
         {
@@ -54,7 +54,7 @@ public class ScoresHandler : EventReceiverInstance
 
         players = new List<PlayerEntry>();
 
-        foreach( var( idx, player ) in playerNames.Enumerate() )
+        foreach( var( idx, player ) in playerData.Enumerate() )
         {
             var nameText = scoreNames.GetChild( 0 );
             var scoreText = scoreValues.GetChild( 0 );
@@ -67,7 +67,7 @@ public class ScoresHandler : EventReceiverInstance
 
             var playerEntry = new PlayerEntry()
             {
-                name = player,
+                name = player.name,
                 score = 0,
                 playerIdx = idx,
                 nameText = nameText.GetComponent<TMPro.TextMeshProUGUI>(),
@@ -75,7 +75,7 @@ public class ScoresHandler : EventReceiverInstance
             };
 
             this.players.Add( playerEntry );
-            playerEntry.nameText.text = player;
+            playerEntry.nameText.text = player.name;
             playerEntry.scoreText.text = "0";
         }
     }

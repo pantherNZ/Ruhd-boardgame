@@ -44,6 +44,8 @@ public class MenuUI : EventReceiverInstance
     {
         base.Start();
 
+        base.modifyListenerWithEnableDisable = false;
+
         stateScreens = new List<CanvasGroup>()
         {
             titleScreen,
@@ -54,9 +56,13 @@ public class MenuUI : EventReceiverInstance
         };
 
         foreach( var screen in stateScreens )
+        {
             screen.SetVisibility( false );
+            screen.gameObject.SetActive( false );
+        }
 
         titleScreen.SetVisibility( true );
+        titleScreen.gameObject.SetActive( true );
 
         var allTiles = new List<TileComponent>();
 
@@ -156,20 +162,20 @@ public class MenuUI : EventReceiverInstance
         // If vsing PC, we need to manually call the start game event
         if( vsComputer )
         {
-            var names = new List<string>()
+            var players = new List<NetworkHandler.PlayerData>()
             {
-                "PLAYER",
-                "AI"
+                new NetworkHandler.PlayerData() { name = "PLAYER" },
+                new NetworkHandler.PlayerData() { name = "AI" },
             };
 
             EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerNames = names }, this );
+            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerData = players }, this );
         }
     }
 
     private IEnumerator HideMenu()
     {
-        yield return Utility.FadeToBlack( GetComponent<CanvasGroup>(), 0.5f );
+        yield return Utility.FadeToBlack( GetComponent<CanvasGroup>(), 0.5f, true );
         gameObject.SetActive( false );
     }
 
@@ -193,6 +199,6 @@ public class MenuUI : EventReceiverInstance
             StopCoroutine( fadeOutCoroutine );
 
         fadeInCoroutine = StartCoroutine( Utility.FadeFromBlack( fadeIn, fadeTimeSec ) );
-        fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec ) );
+        fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec, true ) );
     }
 }

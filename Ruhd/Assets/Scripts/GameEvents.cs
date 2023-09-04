@@ -27,7 +27,7 @@ class TurnStartEvent : IBaseEvent
 class LobbyUpdatedEvent : IBaseEvent
 {
     public Lobby lobby;
-    public List<string> playerNames;
+    public List<NetworkHandler.PlayerData> playerData;
 }
 
 class PlayerScoreEvent : IBaseEvent
@@ -40,5 +40,5 @@ class PreStartGameEvent : IBaseEvent { }
 
 class StartGameEvent : IBaseEvent
 {
-    public List<string> playerNames;
+    public List<NetworkHandler.PlayerData> playerData;
 }

@@ -17,7 +17,7 @@ public class TurnStatusUI : EventReceiverInstance
         }
         else if( e is TurnStartEvent turnStart )
         {
-            var localPlayerName = NetworkManager.Singleton.GetComponent<NetworkHandler>().localPlayerName;
+            var localPlayerName = NetworkManager.Singleton.GetComponent<NetworkHandler>().localPlayerData.name;
             localPlayerTurn = turnStart.player == localPlayerName;
 
             if( localPlayerTurn )
