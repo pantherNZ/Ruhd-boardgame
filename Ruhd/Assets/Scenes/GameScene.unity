@@ -150,7 +150,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 15069647}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -159,7 +159,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0043946, y: -478}
+  m_AnchoredPosition: {x: -0.0043946, y: -443}
   m_SizeDelta: {x: 722, y: 70.0787}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &15069649
@@ -271,6 +271,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88f9216484782044b82defa00ddcac09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modifyListenerWithEnableDisable: 1
   label: {fileID: 15069649}
 --- !u!1 &21042765
 GameObject:
@@ -1399,6 +1400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b64771eb7d21d7d41a2e912a7c0e469c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modifyListenerWithEnableDisable: 1
   constants: {fileID: 11400000, guid: c409cdd99d561c74990cd264601e9611, type: 2}
   canvas: {fileID: 777170218}
   slotsPanelUI: {fileID: 229539333}
@@ -3508,7 +3510,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 708136234}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 525, y: 400.5, z: 0}
+  m_LocalPosition: {x: 525, y: 400.5, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3826,7 +3828,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 777170215}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0.044}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 0.0007, y: 0.0007, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6975,6 +6977,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be6ed7455ed1928459bc05e7d3f3b90d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modifyListenerWithEnableDisable: 1
   codeLabel: {fileID: 752361644}
   playersLabel: {fileID: 1479654048}
   playersDataLabel: {fileID: 86535649}
@@ -7268,8 +7271,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bf699e438fe1c44d95eafca4187a138, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modifyListenerWithEnableDisable: 1
   scoreNames: {fileID: 862191218}
   scoreValues: {fileID: 303983068}
+  scoreGainedUIPrefab: {fileID: 7185626751431525718, guid: dbfc04a401410e447903841dfccc6dc6, type: 3}
 --- !u!1 &2005607200
 GameObject:
   m_ObjectHideFlags: 0
@@ -7586,6 +7591,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b64771eb7d21d7d41a2e912a7c0e469c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modifyListenerWithEnableDisable: 1
   constants: {fileID: 11400000, guid: 7482bc4880e604c4bb99afb0037634e5, type: 2}
   canvas: {fileID: 0}
   slotsPanelUI: {fileID: 0}
@@ -7603,6 +7609,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd713a8ff9c2634488b0e26562272a86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modifyListenerWithEnableDisable: 1
   background: {fileID: 1803416939}
   deck: {fileID: 2077546457}
   cellSize: {x: 100, y: 100}

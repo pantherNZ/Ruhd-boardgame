@@ -1,8 +1,6 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class ScoresHandler : EventReceiverInstance
 {
@@ -17,6 +15,7 @@ public class ScoresHandler : EventReceiverInstance
 
     [SerializeField] Transform scoreNames;
     [SerializeField] Transform scoreValues;
+    [SerializeField] GameObject scoreGainedUIPrefab;
     private List<PlayerEntry> players;
 
     protected override void Start()
@@ -32,10 +31,23 @@ public class ScoresHandler : EventReceiverInstance
         }
         else if( e is PlayerScoreEvent scoreEvent )
         {
-            var player = players.Find( x => x.name == scoreEvent.player );
+            var playerIdx = players.FindIndex( x => x.name == scoreEvent.player );
+            var player = players[playerIdx];
             player.score += scoreEvent.scoreModifier;
             player.scoreText.text = player.score.ToString();
+
+            StartCoroutine( CreateScoreDisplayUI( scoreEvent.tile, playerIdx ) );
         }
+    }
+
+    private IEnumerator CreateScoreDisplayUI( TileComponent tile, int playerIdx )
+    {
+        var scoreDisplay = Instantiate( scoreGainedUIPrefab, transform );
+        scoreDisplay.transform.localPosition = transform.InverseTransformPoint( tile.transform.position );
+        yield return Utility.InterpolatePosition( scoreDisplay.transform, scoreDisplay.transform.localPosition + new Vector3( 0.0f, 200.0f, 0.0f ), 2.0f, true, false );
+        const float textLineHeight = 50.0f;
+        var scoreBoardPos = ( scoreValues.transform as RectTransform ).rect.TopRight().ToVector3();
+        yield return Utility.InterpolatePosition( scoreDisplay.transform, scoreBoardPos - new Vector3( 0.0f, textLineHeight * ( playerIdx + 1 ), 0.0f ), 1.0f, true, false );
     }
 
     public void InitPlayers(List<NetworkHandler.PlayerData> playerData )

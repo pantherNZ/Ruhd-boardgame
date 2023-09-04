@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
+using System.Collections;
 
 public class BoardHandler : NetworkBehaviour, IEventReceiver
 {
@@ -90,6 +91,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
                 {
                     player = currentPlayerturn,
                     scoreModifier = gainedScore,
+                    tile = tile,
                 } );
             }
 
@@ -331,15 +333,15 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         TryPlaceTileOtherPlayer( tile, gridPos );
     }
 
-    public int EvaluateScore( Vector2Int pos, TileComponent newCard )
+    public int EvaluateScore( Vector2Int pos, TileComponent testCard )
     {
         if( !placementAction )
             return 0;
 
-        if( newCard != null )
-            board.Add( pos, newCard );
+        if( testCard != null )
+            board.Add( pos, testCard );
 
-        int patternScore = ScorePatternRule( pos, newCard != null );
+        int patternScore = ScorePatternRule( pos, testCard == null );
         int oneSideScore = ScoreOneSideRule( pos );
         int diffScore = ScoreDiffRule( pos );
         int sameScore = ScoreSameRule( pos );
@@ -351,7 +353,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             "\n    - Same colour: " + sameScore +
             "\n    - Pattern: " + patternScore );
 
-        if( newCard != null )
+        if( testCard != null )
             board.Remove( pos );
 
         return finalScore;
