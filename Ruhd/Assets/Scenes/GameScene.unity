@@ -7275,6 +7275,7 @@ MonoBehaviour:
   scoreNames: {fileID: 862191218}
   scoreValues: {fileID: 303983068}
   scoreGainedUIPrefab: {fileID: 7185626751431525718, guid: dbfc04a401410e447903841dfccc6dc6, type: 3}
+  sideHighlightPrefab: {fileID: 925260688024719224, guid: 0dd3b7827053163458a49e0fb84f435a, type: 3}
 --- !u!1 &2005607200
 GameObject:
   m_ObjectHideFlags: 0

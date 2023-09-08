@@ -23,7 +23,7 @@ public class MenuTileUI : MonoBehaviour
         if( fadeOutCoroutine != null )
             StopCoroutine( fadeOutCoroutine );
 
-        fadeInCoroutine = StartCoroutine( Utility.FadeFromBlack( fadeIn, fadeTimeSec ) );
-        fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec ) );
+        fadeInCoroutine = StartCoroutine( Utility.FadeFromTransparent( fadeIn, fadeTimeSec ) );
+        fadeOutCoroutine = StartCoroutine( Utility.FadeToTransparent( fadeOut, fadeTimeSec ) );
     }
 }

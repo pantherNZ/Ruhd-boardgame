@@ -39,7 +39,7 @@ public class HostGameUI : MonoBehaviour
             canvas.alpha = 1.0f;
             errorText.gameObject.SetActive( true );
             errorText.text = "FAILED TO HOST GAME: " + result.Message;
-            Utility.FunctionTimer.CreateTimer( 5.0f, () => this.FadeToBlack( canvas, 0.5f, true ) );
+            Utility.FunctionTimer.CreateTimer( 5.0f, () => this.FadeToTransparent( canvas, 0.5f, null, true ) );
         }
     }
 }

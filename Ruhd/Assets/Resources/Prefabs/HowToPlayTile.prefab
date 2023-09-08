@@ -117,66 +117,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 925260688024719224}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 09f94e04dfdd65344b2b4a0fd704249c, type: 3}
+  m_Script: {fileID: 11500000, guid: 2c3602a5561eb514c873ba61206003fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnTriggerEnter2DEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnTriggerExit2DEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnCollisionEnter2DEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnCollisionExit2DEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnTriggerEnterEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnTriggerExitEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnCollisionEnterEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnCollisionExitEvent:
-    m_PersistentCalls:
-      m_Calls: []
   buttonRestriction:
     v: 0
     hasValue: 0
   OnPointerEnterEvent:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 9081216609062210904}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
+      m_Calls: []
   OnPointerExitEvent:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 9081216609062210904}
-        m_TargetAssemblyTypeName: MenuTileUI, Assembly-CSharp
-        m_MethodName: ToggleFadeText
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   OnPointerDownEvent:
     m_PersistentCalls:
       m_Calls:

@@ -41,7 +41,7 @@ public class DataHandler : MonoBehaviour
 
             for( int i = 0; i < Utility.GetNumEnumValues<Side>(); ++i )
             {
-                newCard.sides[i] = new TileSide( newCard, int.Parse( cardNumbers[i].Trim() ), int.Parse( cardColours[i].Trim() ) );
+                newCard.sides[i] = new TileSide( newCard, int.Parse( cardNumbers[i].Trim() ), int.Parse( cardColours[i].Trim() ), ( Side )i );
             }
 
             AssetDatabase.CreateAsset( newCard, tilesImportPath + "/Tile" + idx + ".asset" );

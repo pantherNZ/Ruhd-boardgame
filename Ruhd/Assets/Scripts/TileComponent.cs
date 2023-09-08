@@ -68,6 +68,8 @@ public class TileComponent : MonoBehaviour
     private void Start()
     {
         draggableCmp = GetComponent<Draggable>();
+        if( data != null )
+            data.owningComponent = this;
     }
 
     public void SetInteractable( bool interactable )
@@ -80,7 +82,7 @@ public class TileComponent : MonoBehaviour
     {
         if( rotationInterp != null )
             StopCoroutine( rotationInterp );
-        transform.localEulerAngles = new Vector3( 0.0f, 0.0f, ( float )_rotation * -90.0f );
+        transform.localEulerAngles = new Vector3( 0.0f, 0.0f, _rotation.Value() * -90.0f );
         rotationInterp = null;
     }
 
@@ -97,7 +99,7 @@ public class TileComponent : MonoBehaviour
     
     IEnumerator InterpolateRotation()
     {
-        var newRotation = ( float )_rotation * -90.0f - transform.localEulerAngles.z;
+        var newRotation = _rotation.Value() * -90.0f - transform.localEulerAngles.z;
         newRotation = Utility.Mod( newRotation + 180, 360 ) - 180;
         yield return Utility.InterpolateRotation( transform, new Vector3( 0.0f, 0.0f, newRotation ), GameConstants.Instance.tileRotationInterpSec, true );
         rotationInterp = null;
@@ -155,6 +157,9 @@ public class TileComponent : MonoBehaviour
 
     private void Update()
     {
+        if( !draggableCmp )
+            return;
+
         if( localPlayerController == null && NetworkManager.Singleton && NetworkManager.Singleton.LocalClient != null )
             localPlayerController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerController>();
 

@@ -175,7 +175,7 @@ public class MenuUI : EventReceiverInstance
 
     private IEnumerator HideMenu()
     {
-        yield return Utility.FadeToBlack( GetComponent<CanvasGroup>(), 0.5f, true );
+        yield return Utility.FadeToTransparent( GetComponent<CanvasGroup>(), 0.5f, null, true );
         gameObject.SetActive( false );
     }
 
@@ -198,7 +198,7 @@ public class MenuUI : EventReceiverInstance
         if( fadeOutCoroutine != null )
             StopCoroutine( fadeOutCoroutine );
 
-        fadeInCoroutine = StartCoroutine( Utility.FadeFromBlack( fadeIn, fadeTimeSec ) );
-        fadeOutCoroutine = StartCoroutine( Utility.FadeToBlack( fadeOut, fadeTimeSec, true ) );
+        fadeInCoroutine = StartCoroutine( Utility.FadeFromTransparent( fadeIn, fadeTimeSec ) );
+        fadeOutCoroutine = StartCoroutine( Utility.FadeToTransparent( fadeOut, fadeTimeSec, null, true ) );
     }
 }

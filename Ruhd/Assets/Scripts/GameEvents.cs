@@ -32,9 +32,9 @@ class LobbyUpdatedEvent : IBaseEvent
 
 class PlayerScoreEvent : IBaseEvent
 {
-    public TileComponent tile;
+    public TileComponent placedTile;
     public string player;
-    public int scoreModifier;
+    public List<ScoreInfo> scoreModifiers;
 }
 
 class PreStartGameEvent : IBaseEvent { }
