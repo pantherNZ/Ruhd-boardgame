@@ -343,7 +343,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
         List<ScoreInfo> scoreResults = new List<ScoreInfo>();
         scoreResults.AddRange( ScorePatternRule( pos, testCard == null ) );
-        scoreResults.Add( ScoreOneSideRule( pos ) );
+        scoreResults.AddRange( ScoreOneSideRule( pos ) );
         scoreResults.AddRange( ScoreDiffRule( pos ) );
         scoreResults.AddRange( ScoreSameRule( pos ) );
 
@@ -372,21 +372,30 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         other = GetAdjacentSide( pos, direction );
     }
 
-    private ScoreInfo ScoreOneSideRule( Vector2Int pos )
+    private List<ScoreInfo> ScoreOneSideRule( Vector2Int pos )
     {
         TileSide singleSide = null;
         foreach( var side in Utility.GetEnumValues<Side>() )
         {
-            if( singleSide != null )
-                return null;
-            singleSide = GetAdjacentSide( pos, side ) != null ? GetCurrentSide( pos, side ) : null;
+            var sideTile = GetAdjacentSide( pos, side ) != null ? GetCurrentSide( pos, side ) : null;
+            if( sideTile != null )
+            {
+                // If singleSide already set, then we know we must be touching multiple sides (so no bonus score)
+                if( singleSide != null )
+                    return new List<ScoreInfo>();
+                singleSide = sideTile;
+            }
         }
-        return singleSide != null ? new ScoreInfo()
+
+        return new List<ScoreInfo>()
         {
-            score = GameConstants.Instance.oneSideExtraScore,
-            sides = new List<TileSide>() { singleSide },
-            source = ScoreSource.SingleSideBonus,
-        } : null;
+            new ScoreInfo()
+            {
+                score = GameConstants.Instance.oneSideExtraScore,
+                sides = new List<TileSide>() { singleSide },
+                source = ScoreSource.SingleSideBonus,
+            }
+        };
     }
 
     private ScoreInfo ScoreDiffRuleSide( Vector2Int pos, Side direction )
@@ -445,26 +454,27 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
     private ScoreInfo ScorePatternRuleSide( Vector2Int pos, Side side, Vector2Int direction, bool consumePatterns )
     {
-        var current = GetCurrentSide( pos, side );
-        if( current.patternUsed )
-            return null;
-
-        bool valueMatch = true;
-        bool colourMatch = true;
-        for( int i = 1; i < GameConstants.Instance.patternLengthMin; ++i )
+        List<TileSide> sides = new List<TileSide>();
+        int? value = null;
+        int? colour = null;
+        for( int i = 0; i < GameConstants.Instance.patternLengthMin; ++i )
         {
             var next = GetCurrentSide( pos + direction * i, side );
             if( next == null )
                 return null;
             if( next.patternUsed )
                 return null;
-            valueMatch &= current.value == next.value;
-            colourMatch &= current.colour == next.colour;
-            if( !valueMatch && !colourMatch )
+            if( value == null )
+            {
+                value = next.value;
+                colour = next.colour;
+            }
+            else if( next.value != value || next.colour != colour )
+            {
                 return null;
+            }
+            sides.Add( next );
         }
-
-        List<TileSide> sides = new List<TileSide>();
 
         if( consumePatterns )
         {
@@ -476,10 +486,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             {
                 var curSide = GetCurrentSide( min + direction * i, side );
                 if( curSide != null )
-                {
                     curSide.patternUsed = true;
-                    sides.Add( curSide );
-                }
             }
         }
 
@@ -496,13 +503,24 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         List<ScoreInfo> results = new List<ScoreInfo>();
         foreach( var side in Utility.GetEnumValues<Side>() )
         {
-            var leftPattern = ScorePatternRuleSide( pos, side, directions[side.Value()], consumePatterns );
-            var rightPattern = ScorePatternRuleSide( pos, side.Opposite(), directions[side.Value()], consumePatterns );
-            if( leftPattern != null )
-                results.Add( leftPattern );
-            if( rightPattern != null )
-                results.Add( rightPattern );
+            var forwardPattern = ScorePatternRuleSide( pos, side, directions[side.Value()], consumePatterns );
+            var backwardPattern = ScorePatternRuleSide( pos, side.Opposite(), directions[side.Value()], consumePatterns );
+            if( forwardPattern != null )
+                results.Add( forwardPattern );
+            if( backwardPattern != null )
+                results.Add( backwardPattern );
+
+            if( side == Side.Down || side == Side.Right )
+            {
+                var forwardCentrePattern = ScorePatternRuleSide( pos - directions[side.Value()], side, directions[side.Value()], consumePatterns );
+                var backwardCentrePattern = ScorePatternRuleSide( pos - directions[side.Value()], side.Opposite(), directions[side.Value()], consumePatterns );
+                if( forwardCentrePattern != null )
+                    results.Add( forwardCentrePattern );
+                if( backwardCentrePattern != null )
+                    results.Add( backwardCentrePattern );
+            }
         }
+
         return results;
     }
 }

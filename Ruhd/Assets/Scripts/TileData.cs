@@ -10,16 +10,15 @@ public class TileSide
         this.value = value;
         this.colour = colour;
         this.side = side;
-        this.patternUsed = false;
     }
 
-    public int value;
-    public int colour;
-    public TileData card;
-    public bool patternUsed;
+    [ReadOnly] public int value;
+    [ReadOnly] public int colour;
+    [ReadOnly] public TileData card;
+    [ReadOnly] public bool patternUsed;
 
     public Side rotation { get => side.Rotate( card.owningComponent.rotation ); }
-    public Side side;
+    [ReadOnly] public Side side;
 }
 
 [Serializable]
@@ -53,7 +52,7 @@ static class SideUtil
 public class TileData : ScriptableObject
 {
     // Clockwise ordering
-    public TileSide[] sides = new TileSide[4];
-    public string imagePath;
-    public TileComponent owningComponent;
+    [ReadOnly] public TileSide[] sides = new TileSide[4];
+    [ReadOnly] public string imagePath;
+    [HideInInspector] public TileComponent owningComponent;
 }

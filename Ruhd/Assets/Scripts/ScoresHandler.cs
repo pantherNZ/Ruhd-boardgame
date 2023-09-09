@@ -19,6 +19,14 @@ public class ScoreInfo
 
 public class ScoresHandler : EventReceiverInstance
 {
+    public static string[] ScoreSourceNames = new string[]
+    {
+        "MATCHING SIDE",
+        "SIDE DIFFERENCE",
+        "SINGLE SIDE BONUS",
+        "MATCHING PATTERN",
+    };
+
     class PlayerEntry
     {
         public string name;
@@ -50,7 +58,7 @@ public class ScoresHandler : EventReceiverInstance
             var playerIdx = players.FindIndex( x => x.name == scoreEvent.player );
             foreach( var (idx, scoreInfo) in scoreEvent.scoreModifiers.Enumerate() )
             {
-                Utility.FunctionTimer.CreateTimer( 1.0f * idx, () =>
+                Utility.FunctionTimer.CreateTimer( 1.5f * idx, () =>
                 {
                     StartCoroutine( CreateScoreDisplayUI( scoreInfo, playerIdx ) );
                 } );
@@ -62,8 +70,8 @@ public class ScoresHandler : EventReceiverInstance
     {
         var highlight = Instantiate( sideHighlightPrefab, side.card.owningComponent.transform );
         highlight.transform.localPosition = new Vector3();
-        highlight.transform.eulerAngles = new Vector3( 0.0f, 0.0f, side.rotation.Value() * -90.0f );
-        //Utility.FunctionTimer.CreateTimer( 3.0f, () => highlight.Destroy() );
+        highlight.transform.localEulerAngles = new Vector3( 0.0f, 0.0f, side.side.Value() * -90.0f );
+        Utility.FunctionTimer.CreateTimer( 1.0f, () => highlight.Destroy() );
     }
 
     private IEnumerator CreateScoreDisplayUI( ScoreInfo scoreModifier, int playerIdx )
@@ -83,7 +91,7 @@ public class ScoresHandler : EventReceiverInstance
 
         var scoreDisplay = Instantiate( scoreGainedUIPrefab, transform );
         var text = scoreDisplay.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-        text.text = $"+{scoreModifier.score} ({scoreModifier.source})";
+        text.text = $"+{scoreModifier.score} ({ScoreSourceNames[( int )scoreModifier.source]})";
         scoreDisplay.transform.localPosition = transform.InverseTransformPoint( scoreModifier.sides.Back().card.owningComponent.transform.position );
         yield return Utility.InterpolatePosition( scoreDisplay.transform, scoreDisplay.transform.localPosition + new Vector3( 0.0f, 200.0f, 0.0f ), 1.0f, true, Utility.Easing.Linear );
         const float textLineHeight = 50.0f;

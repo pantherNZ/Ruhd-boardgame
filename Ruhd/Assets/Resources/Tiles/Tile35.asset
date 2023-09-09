@@ -17,16 +17,21 @@ MonoBehaviour:
     colour: 3
     card: {fileID: 11400000}
     patternUsed: 0
+    side: 0
   - value: 1
     colour: 1
     card: {fileID: 11400000}
     patternUsed: 0
+    side: 1
   - value: 3
     colour: 3
     card: {fileID: 11400000}
     patternUsed: 0
+    side: 2
   - value: 1
     colour: 2
     card: {fileID: 11400000}
     patternUsed: 0
+    side: 3
   imagePath: Textures/Tiles/35 - Unnamed (Front)
+  owningComponent: {fileID: 0}
