@@ -29,7 +29,11 @@ public class MenuUI : EventReceiverInstance
     [SerializeField] CanvasGroup joinGameInputScreen;
     [SerializeField] CanvasGroup lobbyGameScreen;
     [SerializeField] float fadeTimeSec = 0.5f;
+    [SerializeField] float tileMoveTimerMin = 2.0f;
+    [SerializeField] float tileMoveTimerMax = 10.0f;
 
+    private List<TileComponent> grid = new List<TileComponent>();
+    private List<TileComponent> validTiles = new List<TileComponent>();
     private MenuState state = MenuState.Title;
 
     private Coroutine fadeInCoroutine;
@@ -39,6 +43,9 @@ public class MenuUI : EventReceiverInstance
     private bool centreHighlight;
 
     private List<CanvasGroup> stateScreens;
+
+    private Coroutine rotateTilesRoutine;
+    private Coroutine swapTilesRoutine;
 
     protected override void Start()
     {
@@ -64,8 +71,6 @@ public class MenuUI : EventReceiverInstance
         titleScreen.SetVisibility( true );
         titleScreen.gameObject.SetActive( true );
 
-        var allTiles = new List<TileComponent>();
-
         var cameraRect = Camera.main.pixelRect;
         cameraRect.center = new Vector2( 0, 0 );
 
@@ -82,16 +87,20 @@ public class MenuUI : EventReceiverInstance
             for( int x = -gridSize.x / 2; x < gridSize.x / 2; ++x )
             {
                 if( y >= -1 && y < 1 && x >= -2 && x < 2 )
+                {
+                    grid.Add( null );
                     continue;
+                }
 
                 if( deck.IsDeckEmpty() )
                     deck.Reset();
 
                 var newPosition = GetPosition( new Vector2Int( x, y ) );
                 var tile = deck.DrawTile( true );
+                grid.Add( tile );
                 var isOutsideCamera = !cameraRect.Contains( newPosition );
                 if( !isOutsideCamera )
-                    allTiles.Add( tile );
+                    validTiles.Add( tile );
                 tile.transform.SetParent( background.transform, false );
                 var rectTransform = tile.transform as RectTransform;
                 rectTransform.anchorMin = new Vector2( 0.5f, 0.5f );
@@ -112,7 +121,52 @@ public class MenuUI : EventReceiverInstance
             }
         }
 
-        ReplaceTile( allTiles.RandomItem().gameObject, howToPlayTilePrefab, true );
+        ReplaceTile( validTiles.RandomItem().gameObject, howToPlayTilePrefab, true );
+
+        swapTilesRoutine = StartCoroutine( SwapTilesRandomly() );
+        rotateTilesRoutine = StartCoroutine( RotateTilesRandomly() );
+    }
+
+    private int GetRandomNeighbour( int idx )
+    {
+        List<int> options = new List<int>();
+        if( idx > 0 && grid[idx - 1] != null )
+            options.Add( idx - 1 );
+        if( idx < grid.Count - 1 && grid[idx + 1] != null )
+            options.Add( idx + 1 );
+        if( idx > gridSize.x && grid[idx - gridSize.x] != null )
+            options.Add( idx - gridSize.x );
+        if( idx < grid.Count - 1 - gridSize.x && grid[idx + gridSize.x] != null )
+            options.Add( idx + gridSize.x );
+        return options.RandomItem();
+    }
+
+    private IEnumerator SwapTilesRandomly()
+    {
+        while( true )
+        {
+            var randomTileIdx = Random.Range( 0, grid.Count );
+            var tile = grid[randomTileIdx];
+            if( tile == null )
+                continue;
+            yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
+            var otherTileIdx = GetRandomNeighbour( randomTileIdx );
+            var other = grid[otherTileIdx];
+            this.InterpolatePosition( tile.transform, other.transform.localPosition, 0.5f, true, Utility.Easing.Bounce.InOut );
+            this.InterpolatePosition( other.transform, tile.transform.localPosition, 0.5f, true, Utility.Easing.Bounce.InOut );
+            grid[randomTileIdx] = other;
+            grid[otherTileIdx] = tile;
+        }
+    }
+
+    private IEnumerator RotateTilesRandomly()
+    {
+        while( true )
+        {
+            yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
+            var tile = validTiles.RandomItem();
+            this.InterpolateRotation( tile.transform, new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) ), 0.5f, true, Utility.Easing.Bounce.InOut );
+        }
     }
 
     private void ReplaceTile( GameObject replacee, GameObject prefab, bool resetRotation )
@@ -177,6 +231,8 @@ public class MenuUI : EventReceiverInstance
     {
         yield return Utility.FadeToTransparent( GetComponent<CanvasGroup>(), 0.5f, null, true );
         gameObject.SetActive( false );
+        StopCoroutine( swapTilesRoutine );
+        StopCoroutine( rotateTilesRoutine );
     }
 
     public override void OnEventReceived( IBaseEvent e )
