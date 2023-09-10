@@ -42,4 +42,10 @@ public class HostGameUI : MonoBehaviour
             Utility.FunctionTimer.CreateTimer( 5.0f, () => this.FadeToTransparent( canvas, 0.5f, null, true ) );
         }
     }
+
+    private void Update()
+    {
+        if( Input.GetKeyDown( KeyCode.Return ) )
+            TryHostGame();
+    }
 }
