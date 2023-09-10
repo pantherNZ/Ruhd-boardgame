@@ -93,7 +93,7 @@ public class MenuUI : EventReceiverInstance
                 }
 
                 if( deck.IsDeckEmpty() )
-                    deck.Reset();
+                    deck.Reset( 10 );
 
                 var newPosition = GetPosition( new Vector2Int( x, y ) );
                 var tile = deck.DrawTile( true );

@@ -18,7 +18,7 @@ public class DeckHandler : EventReceiverInstance
         base.Start();
     }
 
-    public void Reset()
+    public void Reset( int numPlayers )
     {
         openHand = new List<TileComponent>();
         allTiles = new List<TileData>();
@@ -72,9 +72,9 @@ public class DeckHandler : EventReceiverInstance
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is StartGameEvent )
+        if( e is StartGameEvent startGameEvent )
         {
-            Reset();
+            Reset( startGameEvent.playerData.Count );
         }
         else if( e is TileSelectedEvent tileSelectedEvent )
         {
@@ -104,7 +104,7 @@ public class DeckHandler : EventReceiverInstance
                 openHand.RemoveAt( selectedCardFromSlot.Value );
 
                 //If deck is empty then we need to draw more tiles
-                if( IsOpenHandEmpty() )
+                if( IsOpenHandEmpty() && !allTiles.IsEmpty() )
                 {
                     for( int i = 0; i < constants.deckNumStartingCards; ++i )
                         DrawCardToOpenHand();

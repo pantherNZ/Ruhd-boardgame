@@ -377,8 +377,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         TileSide singleSide = null;
         foreach( var side in Utility.GetEnumValues<Side>() )
         {
-            var sideTile = GetAdjacentSide( pos, side ) != null ? GetCurrentSide( pos, side ) : null;
-            if( sideTile != null )
+            if( ValidSide( GetAdjacentSide( pos, side ) != null ? GetCurrentSide( pos, side ) : null, out var sideTile ) )
             {
                 // If singleSide already set, then we know we must be touching multiple sides (so no bonus score)
                 if( singleSide != null )
@@ -401,7 +400,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private ScoreInfo ScoreDiffRuleSide( Vector2Int pos, Side direction )
     {
         GetOpposingCardSides( pos, direction, out var side, out var other );
-        if( other != null && side.colour != other.colour )
+        if( ValidSide( other, out var _ ) && side.colour != other.colour )
         {
             return new ScoreInfo()
             {
@@ -428,7 +427,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private ScoreInfo ScoreSameRuleSide( Vector2Int pos, Side direction )
     {
         GetOpposingCardSides( pos, direction, out var side, out var other );
-        if( other != null && side.colour == other.colour && side.value == other.value )
+        if( ValidSide( other, out var _ ) && side.colour == other.colour && side.value == other.value )
         {
             return new ScoreInfo()
             {
@@ -460,9 +459,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         for( int i = 0; i < GameConstants.Instance.patternLengthMin; ++i )
         {
             var next = GetCurrentSide( pos + direction * i, side );
-            if( next == null )
-                return null;
-            if( next.patternUsed )
+            if( !ValidSide( next, out var _ ) )
                 return null;
             if( value == null )
             {
@@ -484,9 +481,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
             for( int i = 0; i < boardSize; ++i )
             {
-                var curSide = GetCurrentSide( min + direction * i, side );
-                if( curSide != null )
-                    curSide.patternUsed = true;
+                if( ValidSide( GetCurrentSide( min + direction * i, side ), out var tile ) )
+                    tile.patternUsed = true;
             }
         }
 
@@ -522,5 +518,11 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         }
 
         return results;
+    }
+
+    private bool ValidSide( TileSide tile, out TileSide outTile )
+    {
+        outTile = tile;
+        return tile != null && flipped[tile.card.owningComponent.networkData.location] == null;
     }
 }
