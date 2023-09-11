@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using Unity.Services.Lobbies;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -19,24 +20,36 @@ public class JoinGameUI : MonoBehaviour
         {
             var image = nameInput.GetComponent<Image>();
             image.color = Color.red;
-            Utility.FunctionTimer.StopTimer( "Color1" );
-            Utility.FunctionTimer.CreateTimer( 1.0f, () => image.color = Color.white, "Color1" );
+            Utility.FunctionTimer.CreateOrUpdateTimer( 1.0f, () => image.color = Color.white, "Color1" );
+            DisplayError( "PLEASE ENTER A NAME" );
             valid = false;
         }
 
-        if( codeInput.text.Length == 0  )
+        if( codeInput.text.Length == 0 || codeInput.text.Length < codeInput.characterLimit )
         {
             var image = codeInput.GetComponent<Image>();
             image.color = Color.red;
-            Utility.FunctionTimer.StopTimer( "Color2" );
-            Utility.FunctionTimer.CreateTimer( 1.0f, () => image.color = Color.white, "Color2" );
+            Utility.FunctionTimer.CreateOrUpdateTimer( 1.0f, () => image.color = Color.white, "Color2" );
+            if( valid )
+                DisplayError( codeInput.text.Length == 0
+                    ? "PLEASE ENTER A VALID JOIN CODE"
+                    : $"CODE MUST BE {codeInput.characterLimit} CHARACTERS" );
             valid = false;
+        }
+
+        var rateLimiter = NetworkManager.Singleton.GetComponent<NetworkHandler>().lobbyRateLimiter;
+        if( valid && !rateLimiter.CheckLimit() )
+        {
+            DisplayError( "MAX REQUESTS REACHED - PLEASE WAIT" );
         }
 
         if( valid )
         {
+            await rateLimiter.WaitForCallAsync();
+
             // show loading screen
             loadingScreen.SetActive( true );
+
             var result = await NetworkManager.Singleton.GetComponent<NetworkHandler>().JoinLobby( codeInput.text, nameInput.text );
 
             // hide loading screen
@@ -49,13 +62,18 @@ public class JoinGameUI : MonoBehaviour
             }
             else
             {
-                var canvas = errorText.GetComponent<CanvasGroup>();
-                canvas.alpha = 1.0f;
-                errorText.gameObject.SetActive( true );
-                errorText.text = "FAILED TO JOIN GAME: " + result.Message;
-                Utility.FunctionTimer.CreateTimer( 5.0f, () => this.FadeToTransparent( canvas, 0.5f, null, true ) );
+                DisplayError( "FAILED TO JOIN GAME: " + result.Message );
             }
         }
+    }
+
+    private void DisplayError( string message )
+    {
+        var canvas = errorText.GetComponent<CanvasGroup>();
+        canvas.alpha = 1.0f;
+        errorText.gameObject.SetActive( true );
+        errorText.text = message.ToUpper();
+        Utility.FunctionTimer.CreateOrUpdateTimer( 5.0f, () => this.FadeToTransparent( canvas, 0.5f, null, true ), "JoinGameErrorFade" );
     }
 
     private void Update()

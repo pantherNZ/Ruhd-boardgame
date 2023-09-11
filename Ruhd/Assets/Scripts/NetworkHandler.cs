@@ -22,11 +22,11 @@ public class NetworkHandler : MonoBehaviour
     }
 
     public PlayerData localPlayerData;
+    public RateLimiter lobbyRateLimiter = new RateLimiter( 2, TimeSpan.FromSeconds( 6.0f ) );
 
     private Lobby lobby;
     private ILobbyEvents lobbyEventsListener;
     private Coroutine lobbyHeartbeatCoroutine;
-    private DateTime lastLobbyUpdate;
 
     const string RngSeedKey = "RngSeed";
     const string PlayerNameKey = "PlayerName";
