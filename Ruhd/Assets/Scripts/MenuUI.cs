@@ -72,6 +72,7 @@ public class MenuUI : EventReceiverInstance
         titleScreen.gameObject.SetActive( true );
 
         var cameraRect = Camera.main.pixelRect;
+        cameraRect.size -= cellSize * 2.0f; 
         cameraRect.center = new Vector2( 0, 0 );
 
         var expandedRect = cameraRect;
@@ -121,7 +122,7 @@ public class MenuUI : EventReceiverInstance
             }
         }
 
-        ReplaceTile( validTiles.RandomItem().gameObject, howToPlayTilePrefab, true );
+        ReplaceTile( validTiles.RandomItem(), howToPlayTilePrefab, true );
 
         swapTilesRoutine = StartCoroutine( SwapTilesRandomly() );
         rotateTilesRoutine = StartCoroutine( RotateTilesRandomly() );
