@@ -32,8 +32,8 @@ public class MenuUI : EventReceiverInstance
     [SerializeField] float tileMoveTimerMin = 2.0f;
     [SerializeField] float tileMoveTimerMax = 10.0f;
 
-    private List<TileComponent> grid = new List<TileComponent>();
-    private List<TileComponent> validTiles = new List<TileComponent>();
+    private List<GameObject> grid = new List<GameObject>();
+    private List<GameObject> validTiles = new List<GameObject>();
     private MenuState state = MenuState.Title;
 
     private Coroutine fadeInCoroutine;
@@ -97,10 +97,10 @@ public class MenuUI : EventReceiverInstance
 
                 var newPosition = GetPosition( new Vector2Int( x, y ) );
                 var tile = deck.DrawTile( true );
-                grid.Add( tile );
+                grid.Add( tile.gameObject );
                 var isOutsideCamera = !cameraRect.Contains( newPosition );
                 if( !isOutsideCamera )
-                    validTiles.Add( tile );
+                    validTiles.Add( tile.gameObject );
                 tile.transform.SetParent( background.transform, false );
                 var rectTransform = tile.transform as RectTransform;
                 rectTransform.anchorMin = new Vector2( 0.5f, 0.5f );
@@ -178,6 +178,8 @@ public class MenuUI : EventReceiverInstance
         if( resetRotation )
             replacement.transform.rotation = Quaternion.identity;
         replacee.Destroy();
+        validTiles[validTiles.FindIndex( x => x == replacee )] = replacement;
+        grid[grid.FindIndex( x => x == replacee )] = replacement;
     }
 
     private Vector2 GetPosition( Vector2Int pos )
