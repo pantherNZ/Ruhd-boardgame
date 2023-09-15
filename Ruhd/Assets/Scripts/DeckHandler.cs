@@ -90,7 +90,7 @@ public class DeckHandler : EventReceiverInstance
             }
         }
         // Check we have a slot selected as this component is also used by the menu (and will receive events if still active)
-        else if( e is TilePlacedEvent tilePlaced && !tilePlaced.tile.flipped && selectedCardFromSlot.HasValue )
+        else if( e is TilePlacedEvent tilePlaced && selectedCardFromSlot.HasValue )
         {
             if( !tilePlaced.successfullyPlaced )
             {

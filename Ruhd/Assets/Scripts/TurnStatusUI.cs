@@ -13,7 +13,7 @@ public class TurnStatusUI : EventReceiverInstance
         if( e is TilePlacedEvent tilePlaced )
         {
             if( localPlayerTurn && tilePlaced.successfullyPlaced )
-                label.text = tilePlaced.tile.flipped ? "PLACE A TILE" : "FLIP A TILE";
+                label.text = "PLACE A TILE";
         }
         else if( e is TurnStartEvent turnStart )
         {

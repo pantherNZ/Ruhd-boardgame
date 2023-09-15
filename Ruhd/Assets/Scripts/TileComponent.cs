@@ -14,23 +14,20 @@ public enum TileSource
 public struct TileNetworkData : IEquatable<TileNetworkData>, INetworkSerializable
 {
     public TileSource source;
-    public bool flipped;
     public Vector2Int location;
     public Side rotation;
 
     public override bool Equals( object obj ) => obj is TileNetworkData other && Equals( other );
     public bool Equals( TileNetworkData other ) =>
             source == other.source
-            && flipped == other.flipped
             && location == other.location
             && rotation == other.rotation;
-    public override int GetHashCode() { return HashCode.Combine( ( int )source, flipped, location, ( int )rotation ); }
+    public override int GetHashCode() { return HashCode.Combine( ( int )source, location, ( int )rotation ); }
     public static bool operator ==( TileNetworkData lhs, TileNetworkData rhs ) => lhs.Equals( rhs );
     public static bool operator !=( TileNetworkData lhs, TileNetworkData rhs ) => !( lhs == rhs );
     void INetworkSerializable.NetworkSerialize<T>( BufferSerializer<T> serializer )
     {
         serializer.SerializeValue( ref source );
-        serializer.SerializeValue( ref flipped );
         serializer.SerializeValue( ref location );
         serializer.SerializeValue( ref rotation );
     }
@@ -44,13 +41,6 @@ public class TileComponent : MonoBehaviour
     {
         get => _rotation;
         set => SetRotation( value, false );
-    }
-
-    [SerializeField] private bool _flipped;
-    public bool flipped 
-    { 
-        get => _flipped; 
-        set => _flipped = networkData.flipped = value; 
     }
 
     public TileNetworkData networkData = new TileNetworkData(){ source = TileSource.Deck };
@@ -113,7 +103,6 @@ public class TileComponent : MonoBehaviour
         var rectTransform = transform as RectTransform;
         storedRotation = _rotation;
         rectTransform.localEulerAngles = new Vector3( 0.0f, 0.0f, 0.0f );
-        flipped = true;
     }
 
     public void ShowFront( bool confirmed = true )
@@ -122,9 +111,6 @@ public class TileComponent : MonoBehaviour
         image.sprite = storedSprite;
         rotation = storedRotation;
         SkipRotateInterpolation();
-
-        if( confirmed )
-            flipped = false;
     }
 
     private bool NetworkTurnCheck()

@@ -13,10 +13,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     [SerializeField] Vector2 padding;
     [SerializeField] Image highlightTilePrefab;
     private Dictionary<Vector2Int, TileComponent> board;
-    private Dictionary<Vector2Int, TileComponent> flipped;
     private Dictionary<Vector2Int, Image> highlights;
     private int boardSize;
-    [SerializeField] bool placementAction = true; // False means flip tile action
     [SerializeField] string currentPlayerturn;
     private List<string> players;
     private Vector2Int? lastPlaced;
@@ -41,7 +39,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private void ResetGame( List<string> playerNames )
     {
         board = new Dictionary<Vector2Int, TileComponent>();
-        flipped = new Dictionary<Vector2Int, TileComponent>();
         PlaceTile( new Vector2Int( 0, 1 ), deck.DrawTile( true ) );
         PlaceTile( new Vector2Int( 0, 0 ), deck.DrawTile( true ) );
         PlaceTile( new Vector2Int( 1, 0 ), deck.DrawTile( true ) );
@@ -62,23 +59,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             successfullyPlaced = validPlacement,
         } );
 
-        // Flipped tile failed to place, return it to where it was on the board before
-        if( tile.flipped )
-        {
-            var found = flipped.First( v => tile == v.Value );
-
-            if( validPlacement )
-            {
-                tile.ShowFront( true );
-                flipped.Remove( found.Key );
-            }
-            else
-            {
-                tile.ShowBack();
-                SetPositionOnGrid( found.Key, tile );
-            }
-        }
-        
         // Valid placement
         if( validPlacement )
         {
@@ -109,33 +89,15 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
     private void NextTurnStage()
     {
-        if( !placementAction )
-        {
-            currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
-            EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
-        }
-
-        placementAction = !placementAction;
-
-        foreach( var tile in flipped.Values )
-            tile.SetInteractable( placementAction );
+        currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
+        EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
     }
 
     private void PlaceTile( Vector2Int pos, TileComponent tile )
     {
         SetPositionOnGrid( pos, tile );
         tile.SetInteractable( false );
-
-        if( placementAction )
-        {
-            board.Add( pos, tile );
-        }
-        else
-        {
-            flipped.Add( pos, tile );
-            tile.ShowBack();
-            ReenablePatterns( pos );
-        }
+        board.Add( pos, tile );
     }
 
     private void SetPositionOnGrid( Vector2Int pos, TileComponent tile )
@@ -197,21 +159,9 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             pos.y <= -boardSize / 2 )
             return false;
 
-        if( flipped.ContainsKey( pos ) )
+        if( board.ContainsKey( pos ) )
             return false;
-
-        if( placementAction )
-        {
-            if( board.ContainsKey( pos ) )
-                return false;
-            return directions.Any( x => board.ContainsKey( pos + x ) );
-        }
-        else if( !lastPlaced.HasValue || pos != lastPlaced.Value )
-        {
-            return board.ContainsKey( pos );
-        }
-
-        return false;
+        return directions.Any( x => board.ContainsKey( pos + x ) );
     }
 
     private void HighlightAvailableSpot( Vector2Int pos )
@@ -236,17 +186,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         highlights = new Dictionary<Vector2Int, Image>();
 
         foreach( var (pos, _) in board )
-        {
-            if( placementAction )
-            {
-                foreach( var direction in directions )
-                    HighlightAvailableSpot( pos + direction );
-            }
-            else
-            {
-                HighlightAvailableSpot( pos );
-            }
-        }
+            foreach( var direction in directions )
+                HighlightAvailableSpot( pos + direction );
     }
 
     public void RemoveHighlights()
@@ -265,9 +206,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         {
             if( tileSelected.showHighlights )
                 HighlightAvailableSpots();
-
-            if( tileSelected.tile.flipped )
-                tileSelected.tile.ShowFront( false );
         }
         else if( e is TileDroppedEvent tilePlacedEvent )
         {
@@ -288,8 +226,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         Debug.Assert( data.source != TileSource.Deck );
         if( data.source == TileSource.Hand )
             return deck.FindTileInOpenHand( data );
-        else if( data.flipped )
-            return flipped[data.location];
         else
             return board[data.location];
     }
@@ -340,9 +276,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
     public List<ScoreInfo> EvaluateScore( Vector2Int pos, TileComponent testCard )
     {
-        if( !placementAction )
-            return null;
-
         if( testCard != null )
             board.Add( pos, testCard );
 
@@ -534,6 +467,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private bool ValidSide( TileSide tile, out TileSide outTile )
     {
         outTile = tile;
-        return tile != null && !flipped.ContainsKey( tile.card.owningComponent.networkData.location );
+        return tile != null;
     }
 }
