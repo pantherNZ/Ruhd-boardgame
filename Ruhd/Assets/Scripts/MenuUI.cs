@@ -35,7 +35,8 @@ public class MenuUI : EventReceiverInstance
     [SerializeField] float tileMoveTimerMax = 10.0f;
     [SerializeField] Utility.EasingFunctionTypes easingFunction;
     [SerializeField] Utility.EasingFunctionMethod easingMethod;
-    [SerializeField] float easingSpeed = 1.0f;
+    [SerializeField] float easingSpeedMove = 1.0f;
+    [SerializeField] float easingSpeedRotate = 1.0f;
 
     private List<GameObject> grid = new List<GameObject>();
     private List<GameObject> validTiles = new List<GameObject>();
@@ -157,8 +158,8 @@ public class MenuUI : EventReceiverInstance
             yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
             var otherTileIdx = GetRandomNeighbour( randomTileIdx );
             var other = grid[otherTileIdx];
-            this.InterpolatePosition( tile.transform, other.transform.localPosition, easingSpeed, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
-            this.InterpolatePosition( other.transform, tile.transform.localPosition, easingSpeed, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
+            this.InterpolatePosition( tile.transform, other.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
+            this.InterpolatePosition( other.transform, tile.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
             grid[randomTileIdx] = other;
             grid[otherTileIdx] = tile;
         }
@@ -170,7 +171,8 @@ public class MenuUI : EventReceiverInstance
         {
             yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
             var tile = validTiles.RandomItem();
-            this.InterpolateRotation( tile.transform, new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) ), easingSpeed, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
+            var rotation = new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) * ( Utility.RandomBool() ? 2 : 1 ) );
+            this.InterpolateRotation( tile.transform, rotation, easingSpeedRotate, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
         }
     }
 
