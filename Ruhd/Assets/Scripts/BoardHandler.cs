@@ -33,9 +33,9 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     {
         EventSystem.Instance.AddSubscriber( this );
 
-        boardSize = Mathf.Min(
-            Mathf.FloorToInt( grid.rect.width / cellSize.x ),
-            Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
+        boardSize = 8;// Mathf.Min(
+            //Mathf.FloorToInt( grid.rect.width / cellSize.x ),
+            //Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
     }
 
     private void ResetGame( List<string> playerNames )
@@ -96,6 +96,11 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             }
 
             NextTurnStage();
+
+            if( board.Count >= boardSize * boardSize )
+            {
+                EventSystem.Instance.TriggerEvent( new GameOverEvent() );
+            }
         }
 
         lastPlaced = gridPos;
@@ -400,7 +405,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private ScoreInfo ScoreDiffRuleSide( Vector2Int pos, Side direction )
     {
         GetOpposingCardSides( pos, direction, out var side, out var other );
-        if( ValidSide( other, out var _ ) && side.colour != other.colour )
+        if( ValidSide( other, out var _ ) && side.colour != other.colour && side.value != other.value )
         {
             return new ScoreInfo()
             {
@@ -461,14 +466,20 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             var next = GetCurrentSide( pos + direction * i, side );
             if( !ValidSide( next, out var _ ) )
                 return null;
-            if( value == null )
+
+            if( i == 0 )
             {
                 value = next.value;
                 colour = next.colour;
             }
-            else if( next.value != value || next.colour != colour )
+            else
             {
-                return null;
+                if( value != null && next.value != value )
+                    value = null;
+                if( colour != null && next.colour != colour )
+                    colour = null;
+                if( value == null && colour == null )
+                    return null;
             }
             sides.Add( next );
         }
@@ -523,6 +534,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private bool ValidSide( TileSide tile, out TileSide outTile )
     {
         outTile = tile;
-        return tile != null && flipped[tile.card.owningComponent.networkData.location] == null;
+        return tile != null && !flipped.ContainsKey( tile.card.owningComponent.networkData.location );
     }
 }
