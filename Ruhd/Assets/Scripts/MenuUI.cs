@@ -28,9 +28,14 @@ public class MenuUI : EventReceiverInstance
     [SerializeField] CanvasGroup hostGameInputScreen;
     [SerializeField] CanvasGroup joinGameInputScreen;
     [SerializeField] CanvasGroup lobbyGameScreen;
+
+    [Header( "Animation" )]
     [SerializeField] float fadeTimeSec = 0.5f;
     [SerializeField] float tileMoveTimerMin = 2.0f;
     [SerializeField] float tileMoveTimerMax = 10.0f;
+    [SerializeField] Utility.EasingFunctionTypes easingFunction;
+    [SerializeField] Utility.EasingFunctionMethod easingMethod;
+    [SerializeField] float easingSpeed = 1.0f;
 
     private List<GameObject> grid = new List<GameObject>();
     private List<GameObject> validTiles = new List<GameObject>();
@@ -116,8 +121,7 @@ public class MenuUI : EventReceiverInstance
 
                 if( Random.Range( 0, 100 ) < flippedChancePercent )
                     ReplaceTile( tile.gameObject, playTilePrefab, true );
-
-                if( Random.Range( 0, 100 ) < howToPlayChancePercent )
+                else if( Random.Range( 0, 100 ) < howToPlayChancePercent )
                     ReplaceTile( tile.gameObject, howToPlayTilePrefab, true );
             }
         }
@@ -153,8 +157,8 @@ public class MenuUI : EventReceiverInstance
             yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
             var otherTileIdx = GetRandomNeighbour( randomTileIdx );
             var other = grid[otherTileIdx];
-            this.InterpolatePosition( tile.transform, other.transform.localPosition, 0.5f, true, Utility.Easing.Bounce.InOut );
-            this.InterpolatePosition( other.transform, tile.transform.localPosition, 0.5f, true, Utility.Easing.Bounce.InOut );
+            this.InterpolatePosition( tile.transform, other.transform.localPosition, easingSpeed, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
+            this.InterpolatePosition( other.transform, tile.transform.localPosition, easingSpeed, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
             grid[randomTileIdx] = other;
             grid[otherTileIdx] = tile;
         }
@@ -166,7 +170,7 @@ public class MenuUI : EventReceiverInstance
         {
             yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
             var tile = validTiles.RandomItem();
-            this.InterpolateRotation( tile.transform, new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) ), 0.5f, true, Utility.Easing.Bounce.InOut );
+            this.InterpolateRotation( tile.transform, new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) ), easingSpeed, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
         }
     }
 
