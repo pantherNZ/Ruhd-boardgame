@@ -29,5 +29,9 @@ public class TurnStatusUI : EventReceiverInstance
                 label.text = $"{turnStart.player}'S TURN";
             }
         }
+        else if ( e is GameOverEvent )
+        {
+
+        }
     }
 }

@@ -43,3 +43,5 @@ class StartGameEvent : IBaseEvent
 {
     public List<NetworkHandler.PlayerData> playerData;
 }
+
+class GameOverEvent : IBaseEvent { }
