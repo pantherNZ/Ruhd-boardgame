@@ -128,6 +128,6 @@ public class DeckHandler : EventReceiverInstance
 
     int GetNumStartingCards()
     {
-        return slotsPanelUI == null ? 0 : Mathf.Max( 2, numPlayers - 1 );
+        return slotsPanelUI == null ? 0 : Mathf.Max( 2, numPlayers );
     }
 }

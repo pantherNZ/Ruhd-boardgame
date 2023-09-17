@@ -51,7 +51,10 @@ public class GameOverUI : EventReceiverInstance
 
     public void ExitGame()
     {
-
+        EventSystem.Instance.TriggerEvent( new ExitGameEvent() );
+        showPanelButtonRef.SetVisibility( false );
+        resultsPanelRef.GetComponent<CanvasGroup>().SetVisibility( false );
+        resultsPanelRef.SetActive( false );
     }
 
     public override void OnEventReceived( IBaseEvent e )
