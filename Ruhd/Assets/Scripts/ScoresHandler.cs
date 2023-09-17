@@ -37,7 +37,7 @@ public class ScoresHandler : EventReceiverInstance
     class PlayerEntry : BasePlayerEntry
     {
         public TMPro.TextMeshProUGUI nameText;
-        public TextNumberAnimatorUI scoreText;
+        public TextNumberAnimatorGroupUI scoreText;
     }
 
     [SerializeField] Transform scoresList;
@@ -136,26 +136,12 @@ public class ScoresHandler : EventReceiverInstance
                 score = 0,
                 playerIdx = idx,
                 nameText = scoreInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>(),
-                scoreText = scoreInstance.GetComponentInChildren<TextNumberAnimatorUI>(),
+                scoreText = scoreInstance.GetComponentInChildren<TextNumberAnimatorGroupUI>(),
             };
 
             this.players.Add( playerEntry );
             playerEntry.nameText.text = player.name;
             playerEntry.scoreText.SetValue( 0 );
-        }
-    }
-
-    public void SortScores()
-    {
-        players.Sort( ( a, b ) =>
-        {
-            return b.score.CompareTo( a.score );
-        } );
-
-        foreach( var( idx, player ) in players.Enumerate() )
-        {
-            player.nameText.transform.SetSiblingIndex( idx );
-            player.scoreText.transform.SetSiblingIndex( idx );
         }
     }
 }

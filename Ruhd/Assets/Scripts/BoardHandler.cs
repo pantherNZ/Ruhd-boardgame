@@ -17,7 +17,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private int boardSize;
     [SerializeField] string currentPlayerturn;
     private List<string> players;
-    private Vector2Int? lastPlaced;
 
     static readonly Vector2Int[] directions = new Vector2Int[]
     {
@@ -76,14 +75,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             }
 
             NextTurnStage();
-
-            if( board.Count >= boardSize * boardSize )
-            {
-                EventSystem.Instance.TriggerEvent( new GameOverEvent() );
-            }
         }
 
-        lastPlaced = gridPos;
         return validPlacement;
     }
 

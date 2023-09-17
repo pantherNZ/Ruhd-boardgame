@@ -5,7 +5,6 @@ public class GameConstants : ScriptableObject
 {
     public int rngSeed = 0; // 0 means non-fixed/random
     public int rngSeedRuntime = 0;
-    public int deckNumStartingCards = 4;
     public int oneSideExtraScore = 1;
     public int patternExtraScore = 2;
     public int patternLengthMin = 3;

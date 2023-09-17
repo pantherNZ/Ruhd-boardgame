@@ -12,6 +12,7 @@ public class DeckHandler : EventReceiverInstance
     private List<TileComponent> openHand = new List<TileComponent>();
     private List<TileData> allTiles = new List<TileData>();
     private int? selectedCardFromSlot;
+    private int numPlayers;
 
     protected override void Start()
     {
@@ -20,13 +21,14 @@ public class DeckHandler : EventReceiverInstance
 
     public void Reset( int numPlayers )
     {
+        this.numPlayers = numPlayers;
         openHand = new List<TileComponent>();
         allTiles = new List<TileData>();
         foreach( var card in DataHandler.GetAllCards() )
             allTiles.Add( Instantiate( card ) );
         allTiles.RandomShuffle();
 
-        for( int i = 0; i < constants.deckNumStartingCards; ++i )
+        for( int i = 0; i < GetNumStartingCards(); ++i )
             DrawCardToOpenHand();
     }
 
@@ -104,14 +106,26 @@ public class DeckHandler : EventReceiverInstance
                 openHand.RemoveAt( selectedCardFromSlot.Value );
 
                 //If deck is empty then we need to draw more tiles
-                if( IsOpenHandEmpty() && !allTiles.IsEmpty() )
+                if( IsOpenHandEmpty() )
                 {
-                    for( int i = 0; i < constants.deckNumStartingCards; ++i )
-                        DrawCardToOpenHand();
+                    if( !allTiles.IsEmpty() )
+                    {
+                        for( int i = 0; i < GetNumStartingCards(); ++i )
+                            DrawCardToOpenHand();
+                    }
+                    else
+                    {
+                        EventSystem.Instance.TriggerEvent( new GameOverEvent() );
+                    }
                 }
             }
 
             selectedCardFromSlot = null;
         }
+    }
+
+    int GetNumStartingCards()
+    {
+        return slotsPanelUI == null ? 0 : Mathf.Max( 2, numPlayers - 1 );
     }
 }

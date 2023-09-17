@@ -1,11 +1,11 @@
-using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
 [ExecuteInEditMode]
-[RequireComponent(typeof(VerticalLayoutGroup))]
+[RequireComponent( typeof( VerticalLayoutGroup ) )]
 public class TextNumberAnimatorUI : MonoBehaviour
 {
     [SerializeField] int currentValue;
@@ -13,7 +13,6 @@ public class TextNumberAnimatorUI : MonoBehaviour
     [SerializeField] float interpSpeed;
     [SerializeField] Utility.EasingFunctionTypes easingFunction;
     [SerializeField] Utility.EasingFunctionMethod easingMethod;
-    [SerializeField] int powerColumn = 1;
 
     private TMPro.TextMeshProUGUI baseNumber;
     private bool inBottomSet;
@@ -21,8 +20,15 @@ public class TextNumberAnimatorUI : MonoBehaviour
 
     void Start()
     {
-        if( !numbers.IsEmpty() )
+        if( numbers != null && !numbers.IsEmpty() )
             return;
+
+        if( PrefabUtility.IsPartOfAnyPrefab( gameObject ) )
+        {
+            numbers = GetComponentsInChildren<TMPro.TextMeshProUGUI>().ToList();
+            numbers = numbers.GetRange( 1, numbers.Count - 2 );
+            return;
+        }
 
         baseNumber = GetComponentInChildren<TMPro.TextMeshProUGUI>();
         Debug.Assert( baseNumber.GetComponent<TextNumberAnimatorUI>() == null );
@@ -59,21 +65,26 @@ public class TextNumberAnimatorUI : MonoBehaviour
     private void Update()
     {
         if( currentValue != internalValue )
+        {
+            if( numbers == null || numbers.IsEmpty() )
+                Start();
             SetValue( currentValue, internalValue == null );
+        }
     }
 
     public void SetValue( int value, bool skipInterpolation = false )
     {
+        Debug.Assert( value >= 0 && value < 10 );
+
         if( value == internalValue )
             return;
 
-        if( numbers.IsEmpty() )
+        if( numbers == null || numbers.IsEmpty() )
         {
             currentValue = value;
             return;
         }
 
-        value %= Mathf.RoundToInt( Mathf.Pow( 10, powerColumn ) );
         var previousValue = currentValue;
         currentValue = value;
         internalValue = value;
