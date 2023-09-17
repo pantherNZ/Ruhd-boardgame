@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum ScoreSource
 {
@@ -38,6 +39,7 @@ public class ScoresHandler : EventReceiverInstance
     {
         public TMPro.TextMeshProUGUI nameText;
         public TextNumberAnimatorGroupUI scoreText;
+        public Image turnHighlight;
     }
 
     [SerializeField] Transform scoresList;
@@ -70,6 +72,13 @@ public class ScoresHandler : EventReceiverInstance
                     StartCoroutine( CreateScoreDisplayUI( scoreInfo, playerIdx ) );
                 } );
             }
+        }
+        else if( e is TurnStartEvent turnStartEvent )
+        {
+            var playerTurn = players.Find( x => x.name == turnStartEvent.player );
+            foreach( var score in players )
+                score.turnHighlight.gameObject.SetActive( false );
+            playerTurn.turnHighlight.gameObject.SetActive( true );
         }
     }
 
@@ -137,6 +146,7 @@ public class ScoresHandler : EventReceiverInstance
                 playerIdx = idx,
                 nameText = scoreInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>(),
                 scoreText = scoreInstance.GetComponentInChildren<TextNumberAnimatorGroupUI>(),
+                turnHighlight = scoreInstance.GetComponentInChildren<Image>(),
             };
 
             this.players.Add( playerEntry );
