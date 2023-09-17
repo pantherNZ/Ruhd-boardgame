@@ -40,7 +40,7 @@ public class TextNumberAnimatorUI : MonoBehaviour
             var child = transform.GetChild( 1 );
             if( child != baseNumber.transform )
             {
-                child.parent = null;
+                child.SetParent( null );
                 DestroyImmediate( child.gameObject );
             }
         }

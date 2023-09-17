@@ -12,10 +12,12 @@ public class GameOverUI : EventReceiverInstance
     [SerializeField] GameObject playerResultPrefab;
     [SerializeField] CanvasGroup showPanelButtonRef;
     [SerializeField] float panelScoresDelaySec = 1.0f;
+    [SerializeField] float panelPerScoreDelaySec = 0.5f;
     [SerializeField] float panelInterpXOffset = -250.0f;
     [SerializeField] float panelInterpTimeSec = 0.5f;
     [SerializeField] float panelFadeTimeSec = 0.5f;
     [SerializeField] float resultStartScale = 5.0f;
+    [SerializeField] float resultScaleInterpTimeSec = 1.0f;
 
     protected override void Start()
     {
@@ -60,11 +62,13 @@ public class GameOverUI : EventReceiverInstance
 
             var scores = scoresHandlerRef.CurrentScores.ToList();
             scores.Sort( ( x, y ) => x.score - y.score );
-            Utility.FunctionTimer.CreateTimer( panelScoresDelaySec, () =>
+            foreach( var (idx, score) in scores.Enumerate() )
             {
-                foreach( var (idx, score) in scores.Enumerate() )
-                    StartCoroutine( ShowResult( score, 1.0f - idx * 0.1f ) );
-            } );
+                Utility.FunctionTimer.CreateTimer( panelScoresDelaySec + idx * panelPerScoreDelaySec, () =>
+                {
+                    StartCoroutine( ShowResult( score, idx == 0 ? 1.0f : 0.9f ) );
+                } );
+            }
         }
         else if( e is StartGameEvent )
         {
@@ -79,8 +83,11 @@ public class GameOverUI : EventReceiverInstance
         var resultDisplay = Instantiate( playerResultPrefab, resultsLayoutgroupRef.transform );
         resultDisplay.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = score.name.ToString();
         resultDisplay.GetComponentInChildren<TextNumberAnimatorGroupUI>().SetValue( score.score );
+        var group = resultDisplay.GetComponent<CanvasGroup>();
+        group.SetVisibility( false );
+        this.FadeFromTransparent( group, resultScaleInterpTimeSec );
         resultDisplay.transform.localScale = new Vector3( resultStartScale, resultStartScale, resultStartScale );
-        yield return Utility.InterpolateScale( resultDisplay.transform, Vector3.one, scale, Utility.Easing.Quadratic.In );
-        //this.Shake( Camera.main.transform, 0.3f, 18.0f, 3.0f, 30.0f, 2.0f );
+        yield return Utility.InterpolateScale( resultDisplay.transform, new Vector3( scale, scale, scale ), resultScaleInterpTimeSec, Utility.Easing.Quadratic.In );
+        this.Shake( Camera.main.transform, 0.3f, -0.015f, 0.001f, 60.0f, 1.2f );
     }
 }
