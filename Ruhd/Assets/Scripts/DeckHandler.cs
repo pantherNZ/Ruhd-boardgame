@@ -98,7 +98,11 @@ public class DeckHandler : EventReceiverInstance
             {
                 // + 1 to account for the placeholder deck card
                 tilePlaced.tile.transform.SetSiblingIndex( selectedCardFromSlot.Value + 1 );
+                var oldPosition = tilePlaced.tile.transform.localPosition;
                 LayoutRebuilder.ForceRebuildLayoutImmediate( slotsPanelUI.transform as RectTransform );
+                var newPosition = tilePlaced.tile.transform.localPosition;
+                tilePlaced.tile.transform.localPosition = oldPosition;
+                this.InterpolatePosition( tilePlaced.tile.transform, newPosition, 0.1f, true );
             }
             else
             {

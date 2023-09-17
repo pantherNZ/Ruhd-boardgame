@@ -92,8 +92,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rotation: 0
-  _flipped: 0
   data: {fileID: 0}
+  draggable: 1
   backsideSprite: {fileID: 0}
 --- !u!114 &6900588042146844479
 MonoBehaviour:
@@ -125,10 +125,34 @@ MonoBehaviour:
     hasValue: 0
   OnPointerEnterEvent:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7202196149287480583}
+        m_TargetAssemblyTypeName: TileComponent, Assembly-CSharp
+        m_MethodName: OnHover
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnPointerExitEvent:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7202196149287480583}
+        m_TargetAssemblyTypeName: TileComponent, Assembly-CSharp
+        m_MethodName: OnUnhover
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnPointerDownEvent:
     m_PersistentCalls:
       m_Calls: []

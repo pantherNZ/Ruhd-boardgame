@@ -45,9 +45,11 @@ public class TileComponent : MonoBehaviour
 
     public TileNetworkData networkData = new TileNetworkData(){ source = TileSource.Deck };
     public TileData data;
+    public bool draggable = true;
     private bool dragging;
 
     [HideInInspector] public Sprite backsideSprite;
+    [HideInInspector] float highlightScale = 1.2f;
     private Sprite storedSprite;
     private Side storedRotation;
     private Coroutine rotationInterp;
@@ -122,7 +124,7 @@ public class TileComponent : MonoBehaviour
     public void OnDragStart()
     {
         // Can only move when it's the local players turn
-        if( !NetworkTurnCheck() )
+        if( !NetworkTurnCheck() || !draggable )
             return;
 
         draggableCmp.StartDrag();
@@ -133,12 +135,31 @@ public class TileComponent : MonoBehaviour
     public void OnDragEnd()
     {
         // Can only move when it's the local players turn
-        if( !NetworkTurnCheck() )
+        if( !NetworkTurnCheck() || !draggable )
             return;
 
+        OnUnhover();
         draggableCmp.EndDrag();
         EventSystem.Instance.TriggerEvent( new TileDroppedEvent() { tile = this } );
         dragging = false;
+    }
+
+    public void OnHover()
+    {
+        // Can only move when it's the local players turn
+        if( !NetworkTurnCheck() )
+            return;
+
+        this.InterpolateScale( new Vector3( highlightScale, highlightScale, highlightScale ), 0.1f, Utility.Easing.Sinusoidal.InOut );
+    }
+
+    public void OnUnhover()
+    {
+        // Can only move when it's the local players turn
+        if( !NetworkTurnCheck() )
+            return;
+
+        this.InterpolateScale( Vector3.one, 0.1f, Utility.Easing.Sinusoidal.InOut );
     }
 
     private void Update()

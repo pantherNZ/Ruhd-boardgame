@@ -130,6 +130,7 @@ public class MenuUI : EventReceiverInstance
 
                 var newPosition = GetPosition( new Vector2Int( x, y ) );
                 var tile = deck.DrawTile( true );
+                tile.draggable = false;
                 grid.Add( tile.gameObject );
                 var isOutsideCamera = !cameraRect.Contains( newPosition );
                 if( !isOutsideCamera )
