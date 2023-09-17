@@ -47,27 +47,37 @@ public class TileComponent : MonoBehaviour
     public TileData data;
     public bool draggable = true;
     private bool dragging;
+    private bool interactable = true;
 
     [HideInInspector] public Sprite backsideSprite;
-    [HideInInspector] float highlightScale = 1.2f;
     private Sprite storedSprite;
     private Side storedRotation;
     private Coroutine rotationInterp;
 
     private PlayerController localPlayerController;
     private Draggable draggableCmp;
+    private TileHoverUI hoverCmp;
+
+    private void Awake()
+    {
+        draggableCmp = GetComponent<Draggable>();
+        hoverCmp = GetComponent<TileHoverUI>();
+
+    }
 
     private void Start()
     {
-        draggableCmp = GetComponent<Draggable>();
         if( data != null )
             data.owningComponent = this;
     }
 
     public void SetInteractable( bool interactable )
     {
-        GetComponent<Draggable>().enabled = interactable;
+        this.interactable = interactable;
+        draggable = false;
         GetComponent<EventDispatcherV2>().enabled = interactable;
+        draggableCmp.enabled = interactable;
+        hoverCmp.enabled = interactable;
     }
 
     public void SkipRotateInterpolation()
@@ -138,28 +148,10 @@ public class TileComponent : MonoBehaviour
         if( !NetworkTurnCheck() || !draggable )
             return;
 
-        OnUnhover();
+        hoverCmp.Unhover();
         draggableCmp.EndDrag();
         EventSystem.Instance.TriggerEvent( new TileDroppedEvent() { tile = this } );
         dragging = false;
-    }
-
-    public void OnHover()
-    {
-        // Can only move when it's the local players turn
-        if( !NetworkTurnCheck() )
-            return;
-
-        this.InterpolateScale( new Vector3( highlightScale, highlightScale, highlightScale ), 0.1f, Utility.Easing.Sinusoidal.InOut );
-    }
-
-    public void OnUnhover()
-    {
-        // Can only move when it's the local players turn
-        if( !NetworkTurnCheck() )
-            return;
-
-        this.InterpolateScale( Vector3.one, 0.1f, Utility.Easing.Sinusoidal.InOut );
     }
 
     private void Update()
@@ -177,6 +169,8 @@ public class TileComponent : MonoBehaviour
                 SetRotation( ( Side )Utility.Mod( ( int )rotation + Mathf.RoundToInt( Mathf.Sign( Input.mouseScrollDelta.y ) ), 4 ), true );
             }
         }
+
+        hoverCmp.enabled = interactable && NetworkTurnCheck();
     }
 
     // If inOpenHand is true, then position just uses the X for the index in the hand

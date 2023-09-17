@@ -313,8 +313,7 @@ public class NetworkHandler : MonoBehaviour
             if( lobbyHeartbeatCoroutine != null )
                 StopCoroutine( lobbyHeartbeatCoroutine );
 
-            EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerData = GetPlayerData() } );
+            EventSystem.Instance.TriggerEvent( new RequestStartGameEvent(){ playerData = GetPlayerData() } );
             Utility.FunctionTimer.CreateTimer( 5.0f, LeaveLobby );
         }
         catch( RelayServiceException e )
@@ -334,8 +333,7 @@ public class NetworkHandler : MonoBehaviour
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
             NetworkManager.Singleton.StartClient();
 
-            EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerData = playerData } );
+            EventSystem.Instance.TriggerEvent( new RequestStartGameEvent() { playerData = playerData } );
         }
         catch( RelayServiceException e )
         {

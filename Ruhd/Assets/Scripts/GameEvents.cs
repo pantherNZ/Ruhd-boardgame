@@ -37,11 +37,17 @@ class PlayerScoreEvent : IBaseEvent
     public List<ScoreInfo> scoreModifiers;
 }
 
+class RequestStartGameEvent : IBaseEvent
+{
+    public List<NetworkHandler.PlayerData> playerData; // No data means vs AI
+}
+
 class PreStartGameEvent : IBaseEvent { }
 
 class StartGameEvent : IBaseEvent
 {
     public List<NetworkHandler.PlayerData> playerData;
+    public bool vsComputer;
 }
 
 class ExitGameEvent : IBaseEvent { }

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 616335228638513208}
   - component: {fileID: 7202196149287480583}
   - component: {fileID: 6900588042146844479}
+  - component: {fileID: 7581548922812419730}
   - component: {fileID: -2846213503775989867}
   m_Layer: 5
   m_Name: Tile
@@ -108,6 +109,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvas: {fileID: 0}
+--- !u!114 &7581548922812419730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 925260688024719224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39a9b6d656337e749bc952aa35785f4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  highlightScale: 1.2
+  highlightSpeed: 0.1
+  easingMethod: 2
+  easingType: 10
 --- !u!114 &-2846213503775989867
 MonoBehaviour:
   m_ObjectHideFlags: 0

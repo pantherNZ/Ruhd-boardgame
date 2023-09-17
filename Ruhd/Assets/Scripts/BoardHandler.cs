@@ -37,6 +37,10 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
     private void ResetGame( List<string> playerNames )
     {
+        if( board != null )
+            foreach( var tile in board.Values )
+                tile.DestroyObject();
+
         board = new Dictionary<Vector2Int, TileComponent>();
         PlaceTile( new Vector2Int( 0, 1 ), deck.DrawTile( true ) );
         PlaceTile( new Vector2Int( 0, 0 ), deck.DrawTile( true ) );

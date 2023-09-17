@@ -60,6 +60,8 @@ public class MenuUI : EventReceiverInstance
     private Coroutine swapTilesRoutine1;
     private Coroutine swapTilesRoutine2;
 
+    private bool interactable = true;
+
     protected override void Start()
     {
         base.Start();
@@ -81,7 +83,7 @@ public class MenuUI : EventReceiverInstance
     private void Init()
     {
         StopAnimations();
-
+        interactable = true;
         state = MenuState.Title;
         gameObject.SetActive( true );
 
@@ -225,6 +227,9 @@ public class MenuUI : EventReceiverInstance
 
     private void Update()
     {
+        if( !interactable )
+            return;
+
         if( state == MenuState.Title || state == MenuState.Buttons )
         {
             if( centreMenuArea != null && centreHighlight != centreMenuArea.GetSceenSpaceRect().Contains( Utility.GetMouseOrTouchPos() ) )
@@ -240,27 +245,45 @@ public class MenuUI : EventReceiverInstance
 
     public void ChangeStateByName( string stateName )
     {
+        if( !interactable )
+            return;
+
         var newState = Utility.ParseEnum<MenuState>( stateName );
         ToggleFadeText( stateScreens[( int )state], stateScreens[( int )newState] );
         state = newState;
     }
 
-    public void StartGame(bool vsComputer)
+    public void RequestStartGame()
     {
-        StartCoroutine( ToggleMenu( false ) );
+        if( !interactable )
+            return;
 
-        // If vsing PC, we need to manually call the start game event
+        RequestStartGame( null );
+    }
+
+    private void RequestStartGame( List<NetworkHandler.PlayerData> playerData)
+    {
+        if( !interactable )
+            return;
+
+        StartCoroutine( ToggleMenu( false ) );
+        bool vsComputer = playerData == null;
+
         if( vsComputer )
         {
-            var players = new List<NetworkHandler.PlayerData>()
+            playerData = new List<NetworkHandler.PlayerData>()
             {
                 new NetworkHandler.PlayerData() { name = "PLAYER" },
                 new NetworkHandler.PlayerData() { name = "AI" },
             };
-
-            EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
-            EventSystem.Instance.TriggerEvent( new StartGameEvent() { playerData = players }, this );
         }
+
+        EventSystem.Instance.TriggerEvent( new PreStartGameEvent() );
+        EventSystem.Instance.TriggerEvent( new StartGameEvent() 
+        { 
+            playerData = playerData, 
+            vsComputer = vsComputer 
+        } );
     }
 
     private void StopAnimations()
@@ -300,12 +323,16 @@ public class MenuUI : EventReceiverInstance
 
         if( show )
         {
+            interactable = false;
             this.FadeToColour( background, Color.black, 1.0f, Utility.Easing.Quintic.In );
             this.FadeToColour( blur, Color.white, 0.5f );
             this.FadeFromTransparent( titleArea, 0.5f );
+            yield return new WaitForSeconds( 2.0f );
+            interactable = true;
         }
         else
         {
+            interactable = false;
             this.FadeToColour( background, Color.clear, 0.5f );
             this.FadeToColour( blur, Color.clear, 1.0f );
             this.FadeToTransparent( titleArea, 0.5f );
@@ -316,9 +343,9 @@ public class MenuUI : EventReceiverInstance
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is StartGameEvent )
+        if( e is RequestStartGameEvent requestStartGameEvent )
         {
-            StartGame( false );
+            RequestStartGame( requestStartGameEvent.playerData );
         }
         else if( e is ExitGameEvent )
         {

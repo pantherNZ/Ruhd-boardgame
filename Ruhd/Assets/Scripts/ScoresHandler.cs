@@ -37,6 +37,7 @@ public class ScoresHandler : EventReceiverInstance
 
     class PlayerEntry : BasePlayerEntry
     {
+        public Transform instance;
         public TMPro.TextMeshProUGUI nameText;
         public TextNumberAnimatorGroupUI scoreText;
         public Image turnHighlight;
@@ -64,6 +65,7 @@ public class ScoresHandler : EventReceiverInstance
         }
         else if( e is PlayerScoreEvent scoreEvent )
         {
+            SetTurnHighlight( scoreEvent.player );
             var playerIdx = players.FindIndex( x => x.name == scoreEvent.player );
             foreach( var (idx, scoreInfo) in scoreEvent.scoreModifiers.Enumerate() )
             {
@@ -75,11 +77,16 @@ public class ScoresHandler : EventReceiverInstance
         }
         else if( e is TurnStartEvent turnStartEvent )
         {
-            var playerTurn = players.Find( x => x.name == turnStartEvent.player );
-            foreach( var score in players )
-                score.turnHighlight.gameObject.SetActive( false );
-            playerTurn.turnHighlight.gameObject.SetActive( true );
+            SetTurnHighlight( turnStartEvent.player );
         }
+    }
+
+    private void SetTurnHighlight( string player )
+    {
+        var playerTurn = players.Find( x => x.name == player );
+        foreach( var score in players )
+            score.turnHighlight.gameObject.SetActive( false );
+        playerTurn.turnHighlight.gameObject.SetActive( true );
     }
 
     private void CreateSideHighlight( TileSide side )
@@ -126,9 +133,16 @@ public class ScoresHandler : EventReceiverInstance
     public void InitPlayers(List<NetworkHandler.PlayerData> playerData )
     {
         if( players != null )
+        {
             foreach( var (idx, player) in players.Enumerate() )
+            {
                 if( idx > 0 )
-                    player.nameText.DestroyObject();
+                {
+                    player.instance.SetParent( null );
+                    player.instance.gameObject.Destroy();
+                }
+            }
+        }
 
         players = new List<PlayerEntry>();
 
@@ -144,9 +158,10 @@ public class ScoresHandler : EventReceiverInstance
                 name = player.name,
                 score = 0,
                 playerIdx = idx,
+                instance = scoreInstance,
                 nameText = scoreInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>(),
                 scoreText = scoreInstance.GetComponentInChildren<TextNumberAnimatorGroupUI>(),
-                turnHighlight = scoreInstance.GetComponentInChildren<Image>(),
+                turnHighlight = scoreInstance.GetComponentInChildren<Image>( true ),
             };
 
             this.players.Add( playerEntry );

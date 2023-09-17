@@ -1256,7 +1256,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4131488015531618495, guid: a7d64d5f433168b4a85bcad1e66a574b, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 4470605676096022430, guid: a7d64d5f433168b4a85bcad1e66a574b, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2139,8 +2139,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2077546458}
         m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
-        m_MethodName: StartGame
-        m_Mode: 6
+        m_MethodName: RequestStartGame
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -9869,7 +9869,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5621729030444875955, guid: b0df9e0bae95d8248aa51ebcdf24b70d, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5836712247467187426, guid: b0df9e0bae95d8248aa51ebcdf24b70d, type: 3}
       propertyPath: m_AnchorMax.y
