@@ -10,6 +10,7 @@ public class LobbyUI : EventReceiverInstance
     [SerializeField] TMPro.TextMeshProUGUI codeLabel;
     [SerializeField] TMPro.TextMeshProUGUI playersLabel;
     [SerializeField] TMPro.TextMeshProUGUI playersDataLabel;
+    [SerializeField] TMPro.TextMeshProUGUI playersCountLabel;
     [SerializeField] Button startGameBtn;
     [SerializeField] Button toggleReadyBtn;
 
@@ -41,6 +42,7 @@ public class LobbyUI : EventReceiverInstance
             if( !multiplePlayers )
                 playersList.Append( "\n\nWAITING FOR OPPONENTS..." );
             playersLabel.text = playersList.ToString();
+            playersCountLabel.text = $"{lobbyUpdated.playerData.Count}/{4}";
             playersDataLabel.text = string.Join( "\n", lobbyUpdated.playerData.Select( x => x.isReady ? "READY" : "NOT READY" ) );
 
             bool canStartGame = lobbyUpdated.lobby.HostId == AuthenticationService.Instance.PlayerId &&
