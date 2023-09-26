@@ -6,8 +6,10 @@ using Unity.Collections;
 [RequireComponent(typeof(NetworkObject))]
 public class PlayerController : NetworkBehaviour, IEventReceiver
 {
-    private NetworkHandler networkHandler;
     public bool isPlayerTurn = false;
+    public ulong clientId;
+    public string playerName;
+    private NetworkHandler networkHandler;
 
     protected void Start()
     {
@@ -19,6 +21,16 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
         base.OnNetworkSpawn();
 
         networkHandler = NetworkManager.Singleton.GetComponent<NetworkHandler>();
+
+        if( IsServer )
+        {
+            NetworkManager.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
+        }
+    }
+
+    private void NetworkManager_OnClientConnectedCallback( ulong clientId )
+    {
+        this.clientId = clientId;
     }
 
     public void OnEventReceived( IBaseEvent e )
@@ -26,6 +38,11 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
         if( e is TurnStartEvent turnStart )
         {
             isPlayerTurn = turnStart.player == networkHandler.localPlayerData.name;
+        }
+        else if( e is StartGameEvent startgame )
+        {
+            var found = startgame.playerData.Find( x => x.clientId == this.clientId );
+            playerName = found.name;
         }
     }
 }

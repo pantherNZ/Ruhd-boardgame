@@ -17,12 +17,15 @@ public class NetworkHandler : MonoBehaviour
 {
     public struct PlayerData
     {
+        public string id;
         public string name;
         public bool isReady;
+        public ulong clientId;
     }
 
     public PlayerData localPlayerData;
     public RateLimiter lobbyRateLimiter = new RateLimiter( 2, TimeSpan.FromSeconds( 6.0f ) );
+    private Dictionary<string, ulong> playerIdsByName = new Dictionary<string, ulong>();
 
     private Lobby lobby;
     private ILobbyEvents lobbyEventsListener;
@@ -32,7 +35,10 @@ public class NetworkHandler : MonoBehaviour
     const string PlayerNameKey = "PlayerName";
     const string PlayerReadyKey = "PlayerReady";
     const string StartGameKey = "StartGame";
+    const string RelayJoinCodeKey = "RelayCode";
     const string RelayConnectionType = "dtls";
+
+    Unity.Services.Relay.Models.Allocation allocation;
 
     async void Start()
     {
@@ -84,14 +90,16 @@ public class NetworkHandler : MonoBehaviour
         return data;
     }
 
-    private Dictionary<string, DataObject> CreateLobbyData( string gameStartJoinCode )
+    private Dictionary<string, DataObject> CreateLobbyData( string gameStartJoinCode, bool startGame = false )
     {
         var data = new Dictionary<string, DataObject>
         {
             { RngSeedKey, new DataObject( DataObject.VisibilityOptions.Member, GameConstants.Instance.rngSeed.ToString() ) }
         };
         if( gameStartJoinCode != null )
-            data.Add( StartGameKey, new DataObject( DataObject.VisibilityOptions.Member, gameStartJoinCode ) );
+            data.Add( RelayJoinCodeKey, new DataObject( DataObject.VisibilityOptions.Member, gameStartJoinCode ) );
+        if( startGame )
+            data.Add( StartGameKey, new DataObject( DataObject.VisibilityOptions.Member, "STARTGAME" ) );
         return data;
     }
 
@@ -101,11 +109,16 @@ public class NetworkHandler : MonoBehaviour
 
         try
         {
+            allocation = await RelayService.Instance.CreateAllocationAsync( 1 );
+            var serverData = new RelayServerData( allocation, RelayConnectionType );
+            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
+            var joinCode = await RelayService.Instance.GetJoinCodeAsync( allocation.AllocationId );
+
             var lobbyOptions = new CreateLobbyOptions()
             {
                 IsPrivate = true,
                 Player = CreateNetworkPlayer(),
-                Data = CreateLobbyData( null )
+                Data = CreateLobbyData( joinCode )
             };
 
             lobby = await LobbyService.Instance.CreateLobbyAsync( localPlayerData.name, 4, lobbyOptions );
@@ -116,6 +129,7 @@ public class NetworkHandler : MonoBehaviour
             } );
             lobbyHeartbeatCoroutine = StartCoroutine( SendLobbyHeartbeat() );
             ListenForLobbyUpdates();
+            NetworkManager.Singleton.StartHost();
             return null;
         }
         catch( LobbyServiceException e )
@@ -123,6 +137,20 @@ public class NetworkHandler : MonoBehaviour
             Debug.LogError( e );
             return e;
         }
+    }
+
+    private void NetworkManager_OnClientConnectedCallback( ulong clientId )
+    {
+        if( NetworkManager.Singleton.IsConnectedClient )
+        {
+            NetworkManager_OnClientConnectedCallbackServerRpc( clientId, localPlayerData.name );
+        }
+    }
+
+    [ServerRpc( RequireOwnership = false )]
+    private void NetworkManager_OnClientConnectedCallbackServerRpc( ulong clientId, string player )
+    {
+        playerIdsByName[player] = clientId;
     }
 
     public async void LeaveLobby()
@@ -196,6 +224,18 @@ public class NetworkHandler : MonoBehaviour
             } );
             ListenForLobbyUpdates();
             GameConstants.Instance.rngSeedRuntime = int.Parse( lobby.Data[RngSeedKey].Value );
+
+            if( lobby.Data.TryGetValue( RelayJoinCodeKey, out var joinCode ) )
+            {
+                if( lobby.HostId != AuthenticationService.Instance.PlayerId )
+                {
+                    var allocation = await RelayService.Instance.JoinAllocationAsync( joinCode.Value );
+                    var serverData = new RelayServerData( allocation, RelayConnectionType );
+                    NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
+                    NetworkManager.Singleton.StartClient();
+                }
+            }
+
             return null;
         }
         catch( LobbyServiceException e )
@@ -222,6 +262,7 @@ public class NetworkHandler : MonoBehaviour
         callbacks.LobbyChanged += OnLobbyChanged;
         callbacks.KickedFromLobby += OnKickedFromLobby;
         callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
+        NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
         try
         {
             lobbyEventsListener = await Lobbies.Instance.SubscribeToLobbyEventsAsync( lobby.Id, callbacks );
@@ -254,11 +295,14 @@ public class NetworkHandler : MonoBehaviour
                 playerData = GetPlayerData(),
             } );
 
-            if( lobby.Data != null && lobby.Data.TryGetValue( StartGameKey, out var joinCode ) )
+            if( lobby.Data != null )
             {
-                if( lobby.HostId != AuthenticationService.Instance.PlayerId )
-                    StartGameClient( joinCode.Value );
-                LeaveLobby();
+                if( lobby.Data.ContainsKey( StartGameKey ) )
+                {
+                    if( lobby.HostId != AuthenticationService.Instance.PlayerId )
+                        StartGameClient();
+                    LeaveLobby();
+                }
             }
         }
     }
@@ -289,8 +333,10 @@ public class NetworkHandler : MonoBehaviour
         {
             return new PlayerData()
             {
+                id = x.Id,
                 name = x.Data[PlayerNameKey].Value,
                 isReady = x.Data[PlayerReadyKey].Value != null,
+                clientId = playerIdsByName.GetValueOrDefault( x.Data[PlayerNameKey].Value ),
             };
         } ).ToList();
     }
@@ -299,15 +345,11 @@ public class NetworkHandler : MonoBehaviour
     {
         try
         {
-            var allocation = await RelayService.Instance.CreateAllocationAsync( 1 );
             var joinCode = await RelayService.Instance.GetJoinCodeAsync( allocation.AllocationId );
-            var serverData = new RelayServerData( allocation, RelayConnectionType );
-            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
-            NetworkManager.Singleton.StartHost();
 
             lobby = await Lobbies.Instance.UpdateLobbyAsync( lobby.Id, new UpdateLobbyOptions()
             {
-                Data = CreateLobbyData( joinCode )
+                Data = CreateLobbyData( joinCode, true )
             } );
 
             if( lobbyHeartbeatCoroutine != null )
@@ -322,17 +364,12 @@ public class NetworkHandler : MonoBehaviour
         }
     }
 
-    private async void StartGameClient( string relayJoinCode )
+    private void StartGameClient()
     {
         try
         {
             var playerData = GetPlayerData(); // Must be done before leaving lobby
             LeaveLobby();
-            var allocation = await RelayService.Instance.JoinAllocationAsync( relayJoinCode );
-            var serverData = new RelayServerData( allocation, RelayConnectionType );
-            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
-            NetworkManager.Singleton.StartClient();
-
             EventSystem.Instance.TriggerEvent( new RequestStartGameEvent() { playerData = playerData } );
         }
         catch( RelayServiceException e )
