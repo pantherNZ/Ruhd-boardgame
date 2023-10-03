@@ -50,6 +50,7 @@ public class TileComponent : MonoBehaviour
     private bool interactable = true;
 
     [HideInInspector] public Sprite backsideSprite;
+    [SerializeField] GameObject ghostedSpritePrefab;
     private Sprite storedSprite;
     private Side storedRotation;
     private Coroutine rotationInterp;
@@ -57,12 +58,12 @@ public class TileComponent : MonoBehaviour
     private PlayerController localPlayerController;
     private Draggable draggableCmp;
     private TileHoverUI hoverCmp;
+    private GameObject ghostedSprite;
 
     private void Awake()
     {
         draggableCmp = GetComponent<Draggable>();
         hoverCmp = GetComponent<TileHoverUI>();
-
     }
 
     private void Start()
@@ -78,6 +79,26 @@ public class TileComponent : MonoBehaviour
         GetComponent<EventDispatcherV2>().enabled = interactable;
         draggableCmp.enabled = interactable;
         hoverCmp.enabled = interactable;
+    }
+
+    public void SetGhosted( bool ghosted )
+    {
+        if( ghosted )
+        {
+            ghostedSprite = Instantiate( ghostedSpritePrefab, transform );
+            ghostedSprite.transform.localPosition = Vector3.zero;
+        } 
+        else if( ghostedSprite != null ) {
+            ghostedSprite.Destroy();
+        }
+
+        var image = GetComponent<Image>();
+        image.color = new Color( 1.0f, 1.0f, 1.0f, ghosted ? 0.5f : 1.0f );
+    }
+
+    public bool IsGhosted()
+    {
+        return ghostedSprite != null;
     }
 
     public void SkipRotateInterpolation()

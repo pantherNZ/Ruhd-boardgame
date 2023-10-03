@@ -123,7 +123,7 @@ public class DeckHandler : EventReceiverInstance
                     }
                 }
 
-                EventSystem.Instance.TriggerEvent( new GameOverEvent() );
+                //EventSystem.Instance.TriggerEvent( new GameOverEvent() );
             }
 
             selectedCardFromSlot = null;

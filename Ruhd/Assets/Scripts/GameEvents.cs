@@ -17,6 +17,7 @@ class TilePlacedEvent : IBaseEvent
 {
     public TileComponent tile;
     public bool successfullyPlaced;
+    public bool waitingForChallenge;
 }
 
 class TurnStartEvent : IBaseEvent
@@ -35,6 +36,7 @@ class PlayerScoreEvent : IBaseEvent
     public TileComponent placedTile;
     public string player;
     public List<ScoreInfo> scoreModifiers;
+    public bool fromChallenge;
 }
 
 class RequestStartGameEvent : IBaseEvent
@@ -53,3 +55,8 @@ class StartGameEvent : IBaseEvent
 class ExitGameEvent : IBaseEvent { }
 
 class GameOverEvent : IBaseEvent { }
+
+class ChallengeStartedEvent : IBaseEvent
+{
+    public string player;
+}

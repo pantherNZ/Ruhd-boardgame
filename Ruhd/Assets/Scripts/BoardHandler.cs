@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
-using System.Collections;
 
 public class BoardHandler : NetworkBehaviour, IEventReceiver
 {
@@ -17,6 +16,17 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private int boardSize;
     [SerializeField] string currentPlayerturn;
     private List<string> players;
+
+    // Chalenge data
+    class ChallengeData
+    {
+        public TileComponent tile;
+        public Vector2Int gridPos;
+        public int scoreTotal;
+        public string challenger;
+    };
+    private Utility.FunctionTimer challengeTimer;
+    private ChallengeData challengePhaseData;
 
     static readonly Vector2Int[] directions = new Vector2Int[]
     {
@@ -42,31 +52,39 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
                 tile.DestroyObject();
 
         board = new Dictionary<Vector2Int, TileComponent>();
-        PlaceTile( new Vector2Int( 0, 1 ), deck.DrawTile( true ) );
-        PlaceTile( new Vector2Int( 0, 0 ), deck.DrawTile( true ) );
-        PlaceTile( new Vector2Int( 1, 0 ), deck.DrawTile( true ) );
-        PlaceTile( new Vector2Int( 1, 1 ), deck.DrawTile( true ) );
+        PlaceTile( deck.DrawTile( true ), new Vector2Int( 0, 1 ) );
+        PlaceTile( deck.DrawTile( true ), new Vector2Int( 0, 0 ) );
+        PlaceTile( deck.DrawTile( true ), new Vector2Int( 1, 0 ) );
+        PlaceTile( deck.DrawTile( true ), new Vector2Int( 1, 1 ) );
 
         players = playerNames;
         currentPlayerturn = players[0]; // Assume 0 is the host/first player, maybe randomise?
         EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
     }
 
-    private bool TryPlaceTile( TileComponent tile, Vector2Int gridPos )
+    private bool TryPlaceTile( TileComponent tile, Vector2Int gridPos, bool challengeReset )
     {
-        bool validPlacement = IsAvailableSpot( gridPos );
+        bool validPlacement = IsAvailableSpot( gridPos ) || challengeReset;
 
         EventSystem.Instance.TriggerEvent( new TilePlacedEvent()
         {
             tile = tile,
             successfullyPlaced = validPlacement,
+            waitingForChallenge = validPlacement && challengePhaseData == null,
         } );
 
-        // Valid placement
+        // Valid placement, activate challenge
+        if( validPlacement && challengePhaseData == null )
+        {
+            StartChallengeTimer( tile, gridPos );
+            PlaceTile( tile, gridPos );
+            tile.SetGhosted( true );
+            return true;
+        }
+
         if( validPlacement )
         {
-            PlaceTile( gridPos, tile );
-            List<ScoreInfo> scoreResults = EvaluateScore( gridPos, null );
+            List<ScoreInfo> scoreResults = EvaluateScore( challengePhaseData != null ? challengePhaseData.gridPos : gridPos, challengePhaseData?.tile );
 
             if( scoreResults != null && scoreResults.Count > 0 )
             {
@@ -74,30 +92,95 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
                 {
                     player = currentPlayerturn,
                     scoreModifiers = scoreResults,
-                    placedTile = tile,
+                    placedTile = challengePhaseData != null ? challengePhaseData.tile : tile,
+                    fromChallenge = challengePhaseData != null,
                 } );
             }
+        }
 
-            NextTurnStage();
+        if( challengePhaseData != null )
+        {
+            ChallengeSuccess( challengePhaseData.gridPos, challengePhaseData.tile );
         }
 
         return validPlacement;
     }
 
-    private void NextTurnStage()
+    private void StartChallengeTimer( TileComponent tile, Vector2Int gridPos )
     {
+        List<ScoreInfo> scoreResults = EvaluateScore( gridPos, tile );
+
+        challengePhaseData = new ChallengeData()
+        {
+            gridPos = gridPos,
+            scoreTotal = scoreResults.Sum( x => x.score ),
+            tile = tile,
+        };
+
+        challengeTimer = Utility.FunctionTimer.CreateTimer( GameConstants.Instance.challengeStartTimerSec, () =>
+        {
+            ChallengeFailed();
+        } );
+    }
+
+    [ServerRpc( RequireOwnership = false )]
+    public void RequestChallengeServerRpc( ServerRpcParams rpcParams = default )
+    {
+        if( challengePhaseData.challenger != null )
+            return;
+
+        var player = NetworkManager.Singleton.ConnectedClients[rpcParams.Receive.SenderClientId];
+        var name = player.PlayerObject.GetComponent<PlayerController>().playerName;
+        challengePhaseData.challenger = name;
+        ChallengeClientRpc( name );
+    }
+
+    [ClientRpc]
+    public void ChallengeClientRpc( string player )
+    {
+        Debug.Assert( challengePhaseData != null );
+        challengePhaseData.challenger = player;
+        challengeTimer.Stop();
+
+        challengeTimer = Utility.FunctionTimer.CreateTimer( GameConstants.Instance.challengeActionTimerSec, () =>
+        {
+            ChallengeFailed();
+        } );
+
+        EventSystem.Instance.TriggerEvent( new ChallengeStartedEvent()
+        {
+            player = player,
+        } );
+    }
+
+    private void ChallengeFailed()
+    {
+        Debug.Assert( challengePhaseData != null );
+        var data = challengePhaseData;
+        challengePhaseData.tile.SetGhosted( false );
+        var challengeData = challengePhaseData;
+        TryPlaceTile( challengeData.tile, challengeData.gridPos, true );
+        challengePhaseData = null;
         currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
+        EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
+
+    }
+
+    private void ChallengeSuccess( Vector2Int pos, TileComponent tile )
+    {
+        Debug.Assert( challengePhaseData != null );
+        challengePhaseData = null;
         EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
     }
 
-    private void PlaceTile( Vector2Int pos, TileComponent tile )
+    private void PlaceTile( TileComponent tile, Vector2Int pos )
     {
-        SetPositionOnGrid( pos, tile );
+        SetPositionOnGrid( tile, pos );
         tile.SetInteractable( false );
         board.Add( pos, tile );
     }
 
-    private void SetPositionOnGrid( Vector2Int pos, TileComponent tile )
+    private void SetPositionOnGrid( TileComponent tile, Vector2Int pos )
     {
         tile.SetData( TileSource.Board, pos );
         tile.transform.SetParent( grid, false );
@@ -239,7 +322,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         if( NetworkManager.Singleton.IsClient )
             TileDroppedRequestServerRpc( tilePlacedEvent.tile.networkData, gridPos );
         else // Local code path
-            TryPlaceTile( tilePlacedEvent.tile, gridPos );
+            TryPlaceTile( tilePlacedEvent.tile, gridPos, false );
     }
 
     private bool TryPlaceTileOtherPlayer( TileNetworkData tile, Vector2Int gridPos )
@@ -248,7 +331,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         if( tileCmp == null )
             return false;
         EventSystem.Instance.TriggerEvent( new TileSelectedEvent() { tile = tileCmp, showHighlights = false } );
-        return TryPlaceTile( tileCmp, gridPos );
+        return TryPlaceTile( tileCmp, gridPos, false );
     }
 
     [ServerRpc( RequireOwnership = false )]

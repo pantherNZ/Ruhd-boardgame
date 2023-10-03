@@ -9,6 +9,8 @@ public class GameConstants : ScriptableObject
     public int patternExtraScore = 2;
     public int patternLengthMin = 3;
     public float tileRotationInterpSec = 0.2f;
+    public float challengeStartTimerSec = 5.0f;
+    public float challengeActionTimerSec = 10.0f;
 
     private static GameConstants _Instance;
     public static GameConstants Instance

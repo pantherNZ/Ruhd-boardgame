@@ -96,6 +96,7 @@ MonoBehaviour:
   data: {fileID: 0}
   draggable: 1
   backsideSprite: {fileID: 0}
+  ghostedSpritePrefab: {fileID: 925260688024719224, guid: 2603e2b799f4ba949ae63d782cad0ef8, type: 3}
 --- !u!114 &6900588042146844479
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -143,9 +144,9 @@ MonoBehaviour:
   OnPointerEnterEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 7202196149287480583}
-        m_TargetAssemblyTypeName: TileComponent, Assembly-CSharp
-        m_MethodName: OnHover
+      - m_Target: {fileID: 7581548922812419730}
+        m_TargetAssemblyTypeName: TileHoverUI, Assembly-CSharp
+        m_MethodName: Hover
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -158,9 +159,9 @@ MonoBehaviour:
   OnPointerExitEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 7202196149287480583}
-        m_TargetAssemblyTypeName: TileComponent, Assembly-CSharp
-        m_MethodName: OnUnhover
+      - m_Target: {fileID: 7581548922812419730}
+        m_TargetAssemblyTypeName: TileHoverUI, Assembly-CSharp
+        m_MethodName: Unhover
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
