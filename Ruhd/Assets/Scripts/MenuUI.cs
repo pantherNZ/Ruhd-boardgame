@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -271,9 +272,12 @@ public class MenuUI : EventReceiverInstance
 
         if( vsComputer )
         {
+            var localPlayerName = "PLAYER";
+            NetworkManager.Singleton.GetComponent<NetworkHandler>().localPlayerData.name = localPlayerName;
+
             playerData = new List<NetworkHandler.PlayerData>()
             {
-                new NetworkHandler.PlayerData() { name = "PLAYER" },
+                new NetworkHandler.PlayerData() { name = localPlayerName },
                 new NetworkHandler.PlayerData() { name = "AI" },
             };
         }

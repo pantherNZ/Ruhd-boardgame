@@ -62,9 +62,9 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
     }
 
-    private bool TryPlaceTile( TileComponent tile, Vector2Int gridPos, bool challengeReset )
+    private bool TryPlaceTile( TileComponent tile, Vector2Int gridPos )
     {
-        bool validPlacement = IsAvailableSpot( gridPos ) || challengeReset;
+        bool validPlacement = IsAvailableSpot( gridPos );
 
         EventSystem.Instance.TriggerEvent( new TilePlacedEvent()
         {
@@ -157,10 +157,28 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     {
         Debug.Assert( challengePhaseData != null );
         var data = challengePhaseData;
-        challengePhaseData.tile.SetGhosted( false );
-        var challengeData = challengePhaseData;
-        TryPlaceTile( challengeData.tile, challengeData.gridPos, true );
+        data.tile.SetGhosted( false );
         challengePhaseData = null;
+
+        EventSystem.Instance.TriggerEvent( new TilePlacedEvent()
+        {
+            tile = data.tile,
+            successfullyPlaced = true,
+        } );
+
+        List<ScoreInfo> scoreResults = EvaluateScore( data.gridPos, null );
+
+        if( scoreResults != null && scoreResults.Count > 0 )
+        {
+            EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
+            {
+                player = currentPlayerturn,
+                scoreModifiers = scoreResults,
+                placedTile = data.tile,
+                fromChallenge = false,
+            } );
+        }
+
         currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
         EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
 
@@ -322,7 +340,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         if( NetworkManager.Singleton.IsClient )
             TileDroppedRequestServerRpc( tilePlacedEvent.tile.networkData, gridPos );
         else // Local code path
-            TryPlaceTile( tilePlacedEvent.tile, gridPos, false );
+            TryPlaceTile( tilePlacedEvent.tile, gridPos );
     }
 
     private bool TryPlaceTileOtherPlayer( TileNetworkData tile, Vector2Int gridPos )
@@ -331,7 +349,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         if( tileCmp == null )
             return false;
         EventSystem.Instance.TriggerEvent( new TileSelectedEvent() { tile = tileCmp, showHighlights = false } );
-        return TryPlaceTile( tileCmp, gridPos, false );
+        return TryPlaceTile( tileCmp, gridPos );
     }
 
     [ServerRpc( RequireOwnership = false )]
