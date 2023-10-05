@@ -26,6 +26,16 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
         {
             NetworkManager.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
         }
+        else if( IsClient )
+        {
+            OnNetworkSpawnServerRpc( networkHandler.localPlayerData.name );
+        }
+    }
+
+    [ServerRpc( RequireOwnership = false )]
+    public void OnNetworkSpawnServerRpc( string player, ServerRpcParams serverRpcParams = default )
+    {
+        networkHandler.playerIdsByName[player] = serverRpcParams.Receive.SenderClientId;
     }
 
     private void NetworkManager_OnClientConnectedCallback( ulong clientId )
@@ -43,6 +53,10 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
         {
             var found = startgame.playerData.Find( x => x.clientId == this.clientId );
             playerName = found.name;
+        }
+        else if( e is ChallengeStartedEvent challengeStarted )
+        {
+            //challengeStarted.challengeData.tile
         }
     }
 }

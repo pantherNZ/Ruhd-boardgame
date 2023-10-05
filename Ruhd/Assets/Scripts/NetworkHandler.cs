@@ -25,7 +25,7 @@ public class NetworkHandler : MonoBehaviour
 
     public PlayerData localPlayerData;
     public RateLimiter lobbyRateLimiter = new RateLimiter( 2, TimeSpan.FromSeconds( 6.0f ) );
-    private Dictionary<string, ulong> playerIdsByName = new Dictionary<string, ulong>();
+    public readonly Dictionary<string, ulong> playerIdsByName = new Dictionary<string, ulong>();
 
     private Lobby lobby;
     private ILobbyEvents lobbyEventsListener;
@@ -103,7 +103,7 @@ public class NetworkHandler : MonoBehaviour
         return data;
     }
 
-    public async Task<LobbyServiceException> HostLobby( string name )
+    public async Task<RequestFailedException> HostLobby( string name )
     {
         localPlayerData.name = name;
 
@@ -130,6 +130,8 @@ public class NetworkHandler : MonoBehaviour
             lobbyHeartbeatCoroutine = StartCoroutine( SendLobbyHeartbeat() );
             ListenForLobbyUpdates();
             NetworkManager.Singleton.StartHost();
+            playerIdsByName.Clear();
+            playerIdsByName[name] = NetworkManager.Singleton.LocalClientId;
             return null;
         }
         catch( LobbyServiceException e )
@@ -137,20 +139,11 @@ public class NetworkHandler : MonoBehaviour
             Debug.LogError( e );
             return e;
         }
-    }
-
-    private void NetworkManager_OnClientConnectedCallback( ulong clientId )
-    {
-        if( NetworkManager.Singleton.IsConnectedClient )
+        catch( RelayServiceException e )
         {
-            NetworkManager_OnClientConnectedCallbackServerRpc( clientId, localPlayerData.name );
+            Debug.LogError( e );
+            return e;
         }
-    }
-
-    [ServerRpc( RequireOwnership = false )]
-    private void NetworkManager_OnClientConnectedCallbackServerRpc( ulong clientId, string player )
-    {
-        playerIdsByName[player] = clientId;
     }
 
     public async void LeaveLobby()
@@ -205,7 +198,7 @@ public class NetworkHandler : MonoBehaviour
         }
     }
 
-    public async Task<LobbyServiceException> JoinLobby( string code, string name )
+    public async Task<RequestFailedException> JoinLobby( string code, string name )
     {
         localPlayerData.name = name;
 
@@ -244,6 +237,11 @@ public class NetworkHandler : MonoBehaviour
                 Debug.LogError( e );
             return e;
         }
+        catch( RelayServiceException e )
+        {
+            Debug.LogError( e );
+            return e;
+        }
     }
 
     private IEnumerator SendLobbyHeartbeat()
@@ -262,7 +260,6 @@ public class NetworkHandler : MonoBehaviour
         callbacks.LobbyChanged += OnLobbyChanged;
         callbacks.KickedFromLobby += OnKickedFromLobby;
         callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
-        NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
         try
         {
             lobbyEventsListener = await Lobbies.Instance.SubscribeToLobbyEventsAsync( lobby.Id, callbacks );

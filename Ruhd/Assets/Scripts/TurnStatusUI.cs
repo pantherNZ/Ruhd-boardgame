@@ -10,8 +10,17 @@ public class TurnStatusUI : EventReceiverInstance
     {
         if( e is TilePlacedEvent tilePlaced )
         {
-            if( localPlayerTurn && tilePlaced.successfullyPlaced )
-                label.text = "PLACE A TILE";
+            if( localPlayerTurn )
+            {
+                if( tilePlaced.successfullyPlaced )
+                    label.text = "PLACE A TILE";
+                else if( tilePlaced.waitingForChallenge )
+                    label.text = "OPEN TO CHALLENGE";
+            }
+        }
+        else if( e is ChallengeStartedEvent )
+        {
+            label.text = "CHALLENGE";
         }
         else if( e is TurnStartEvent turnStart )
         {

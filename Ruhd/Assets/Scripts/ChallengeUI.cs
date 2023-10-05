@@ -45,8 +45,10 @@ public class ChallengeUI : EventReceiverInstance
         }
         else if( e is ChallengeStartedEvent challengeStarted )
         {
+            // TODO: Show challenge activated UI
+
             timerDisplay.SetActive( true );
-            challengeBtn.gameObject.SetActive( challengeStarted.player == NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerController>().playerName );
+            challengeBtn.gameObject.SetActive( false );
             StopAllCoroutines();
             StartCoroutine( UpdateTimerText( GameConstants.Instance.challengeStartTimerSec ) );
         }

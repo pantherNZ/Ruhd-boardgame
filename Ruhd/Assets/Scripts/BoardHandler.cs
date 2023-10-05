@@ -17,8 +17,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     [SerializeField] string currentPlayerturn;
     private List<string> players;
 
-    // Chalenge data
-    class ChallengeData
+    // Challenge data
+    public class ChallengeData
     {
         public TileComponent tile;
         public Vector2Int gridPos;
@@ -150,7 +150,15 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         EventSystem.Instance.TriggerEvent( new ChallengeStartedEvent()
         {
             player = player,
+            challengeData = challengePhaseData,
         } );
+
+        if( player == NetworkManager.Singleton.GetComponent<NetworkHandler>().localPlayerData.name )
+        {
+            challengePhaseData.tile.GetComponent<TileComponent>().OnDragStart();
+            challengePhaseData.tile.SetInteractable( true );
+            challengePhaseData.tile.SetGhosted( false );
+        }
     }
 
     private void ChallengeFailed()

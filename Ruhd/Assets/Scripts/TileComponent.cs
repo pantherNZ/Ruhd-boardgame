@@ -70,6 +70,8 @@ public class TileComponent : MonoBehaviour
     {
         if( data != null )
             data.owningComponent = this;
+
+        GetComponent<TileHoverUI>().canHoverCheck = NetworkTurnCheck;
     }
 
     public void SetInteractable( bool interactable )
