@@ -15,12 +15,21 @@ using UnityEngine;
 
 public class NetworkHandler : MonoBehaviour
 {
+    public enum PlayerType
+    {
+        Local,
+        AI,
+        Network,
+    }
+
     public struct PlayerData
     {
         public string id;
         public string name;
         public bool isReady;
         public ulong clientId;
+        public PlayerType type;
+        public bool isRemotePlayer;
     }
 
     public PlayerData localPlayerData;
@@ -56,15 +65,15 @@ public class NetworkHandler : MonoBehaviour
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
         // ParrelSync should only be used within the Unity Editor so you should use the UNITY_EDITOR define
-#if UNITY_EDITOR
-        if( ParrelSync.ClonesManager.IsClone() )
-        {
-            // When using a ParrelSync clone, switch to a different authentication profile to force the clone
-            // to sign in as a different anonymous user account.
-            string customArgument = ParrelSync.ClonesManager.GetArgument();
-            AuthenticationService.Instance.SwitchProfile( $"Clone_{customArgument}_Profile" );
-        }
-#endif
+//#if UNITY_EDITOR
+//        if( ParrelSync.ClonesManager.IsClone() )
+//        {
+//            // When using a ParrelSync clone, switch to a different authentication profile to force the clone
+//            // to sign in as a different anonymous user account.
+//            string customArgument = ParrelSync.ClonesManager.GetArgument();
+//            AuthenticationService.Instance.SwitchProfile( $"Clone_{customArgument}_Profile" );
+//        }
+//#endif
     }
 
     public void ConfirmName( TMPro.TMP_InputField input )
@@ -334,6 +343,8 @@ public class NetworkHandler : MonoBehaviour
                 name = x.Data[PlayerNameKey].Value,
                 isReady = x.Data[PlayerReadyKey].Value != null,
                 clientId = playerIdsByName.GetValueOrDefault( x.Data[PlayerNameKey].Value ),
+                type = NetworkHandler.PlayerType.Network,
+                isRemotePlayer = x.Data[PlayerNameKey].Value != localPlayerData.name,
             };
         } ).ToList();
     }

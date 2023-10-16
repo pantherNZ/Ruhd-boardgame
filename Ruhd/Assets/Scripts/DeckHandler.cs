@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -70,6 +71,11 @@ public class DeckHandler : EventReceiverInstance
         newCard.SetData( TileSource.Hand, new Vector2Int( openHand.Count, 0 ) );
         openHand.Add( newCard );
         newCard.transform.SetParent( slotsPanelUI.transform, false );
+    }
+
+    public ReadOnlyCollection<TileComponent> GetOpenHand()
+    {
+        return openHand.AsReadOnly();
     }
 
     public override void OnEventReceived( IBaseEvent e )

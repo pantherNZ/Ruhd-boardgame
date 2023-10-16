@@ -135,29 +135,30 @@ public class MenuUI : EventReceiverInstance
                 var tile = deck.DrawTile( true );
                 tile.draggable = false;
                 grid.Add( tile.gameObject );
-                var isOutsideCamera = !cameraRect.Contains( newPosition );
-                if( !isOutsideCamera )
-                    validTiles.Add( tile.gameObject );
                 tile.transform.SetParent( background.transform, false );
                 var rectTransform = tile.transform as RectTransform;
                 rectTransform.anchorMin = new Vector2( 0.5f, 0.5f );
                 rectTransform.anchorMax = new Vector2( 0.5f, 0.5f );
                 rectTransform.anchoredPosition = newPosition;
 
-                if( y >= -2 && y < 2 && x >= -3 && x < 3 )
-                    continue;
+                if( cameraRect.Contains( newPosition ) && !( y >= -2 && y < 2 && x >= -3 && x < 3 ) )
+                    validTiles.Add( tile.gameObject );
 
-                if( isOutsideCamera )
-                    continue;
-
-                if( Random.Range( 0, 100 ) < flippedChancePercent )
-                    ReplaceTile( tile.gameObject, playTilePrefab, true );
-                else if( Random.Range( 0, 100 ) < howToPlayChancePercent )
-                    ReplaceTile( tile.gameObject, howToPlayTilePrefab, true );
+                //if( y >= -2 && y < 2 && x >= -3 && x < 3 )
+                //    continue;
+                //
+                //if( isOutsideCamera )
+                //    continue;
+                //
+                //if( Random.Range( 0, 100 ) < flippedChancePercent )
+                //    ReplaceTile( tile.gameObject, playTilePrefab, true );
+                //else if( Random.Range( 0, 100 ) < howToPlayChancePercent )
+                //    ReplaceTile( tile.gameObject, howToPlayTilePrefab, true );
             }
         }
 
         ReplaceTile( validTiles.RandomItem(), howToPlayTilePrefab, true );
+        ReplaceTile( validTiles.RandomItem(), playTilePrefab, true );
 
         swapTilesRoutine = StartCoroutine( SwapTilesRandomly() );
         rotateTilesRoutine = StartCoroutine( RotateTilesRandomly() );
@@ -277,8 +278,8 @@ public class MenuUI : EventReceiverInstance
 
             playerData = new List<NetworkHandler.PlayerData>()
             {
-                new NetworkHandler.PlayerData() { name = localPlayerName },
-                new NetworkHandler.PlayerData() { name = "AI" },
+                new NetworkHandler.PlayerData() { name = localPlayerName, type = NetworkHandler.PlayerType.Local },
+                new NetworkHandler.PlayerData() { name = "AI", type = NetworkHandler.PlayerType.AI },
             };
         }
 

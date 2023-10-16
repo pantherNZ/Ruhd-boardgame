@@ -41,8 +41,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         EventSystem.Instance.AddSubscriber( this );
 
         boardSize = 8;// Mathf.Min(
-            //Mathf.FloorToInt( grid.rect.width / cellSize.x ),
-            //Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
+                      //Mathf.FloorToInt( grid.rect.width / cellSize.x ),
+                      //Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
     }
 
     private void ResetGame( List<string> playerNames )
@@ -62,7 +62,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
     }
 
-    private bool TryPlaceTile( TileComponent tile, Vector2Int gridPos )
+    public bool TryPlaceTile( TileComponent tile, Vector2Int gridPos )
     {
         bool validPlacement = IsAvailableSpot( gridPos );
 
@@ -117,14 +117,24 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             tile = tile,
         };
 
-        challengeTimer = Utility.FunctionTimer.CreateTimer( GameConstants.Instance.challengeStartTimerSec, () =>
+        float challengeTime = ( GameController.Instance.isOfflineGame && GameController.Instance.isLocalPlayerTurn ) ? 
+            GameConstants.Instance.challengeStartTimerSecLocal : GameConstants.Instance.challengeStartTimerSec;
+        challengeTimer = Utility.FunctionTimer.CreateTimer( challengeTime, () =>
         {
             ChallengeFailed();
         } );
     }
 
+    public void RequestChallenge( string player )
+    {
+        if( NetworkManager.Singleton.IsClient )
+            RequestChallengeServerRpc();
+        else
+            Challenge( player ?? GameController.Instance.localPlayerName );
+    }
+
     [ServerRpc( RequireOwnership = false )]
-    public void RequestChallengeServerRpc( ServerRpcParams rpcParams = default )
+    void RequestChallengeServerRpc( ServerRpcParams rpcParams = default )
     {
         if( challengePhaseData.challenger != null )
             return;
@@ -132,14 +142,21 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         var player = NetworkManager.Singleton.ConnectedClients[rpcParams.Receive.SenderClientId];
         var name = player.PlayerObject.GetComponent<PlayerController>().playerName;
         challengePhaseData.challenger = name;
+        challengePhaseData.tile.SetBeingChallenged( name );
         ChallengeClientRpc( name );
     }
 
     [ClientRpc]
-    public void ChallengeClientRpc( string player )
+    void ChallengeClientRpc( string player )
+    {
+        Challenge( player );
+    }
+
+    private void Challenge( string player )
     {
         Debug.Assert( challengePhaseData != null );
         challengePhaseData.challenger = player;
+        challengePhaseData.tile.SetBeingChallenged( name );
         challengeTimer.Stop();
 
         challengeTimer = Utility.FunctionTimer.CreateTimer( GameConstants.Instance.challengeActionTimerSec, () =>
@@ -153,11 +170,13 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             challengeData = challengePhaseData,
         } );
 
-        if( player == NetworkManager.Singleton.GetComponent<NetworkHandler>().localPlayerData.name )
+        if( GameController.Instance.localPlayerName == player )
         {
-            challengePhaseData.tile.GetComponent<TileComponent>().OnDragStart();
+            board.Remove( challengePhaseData.gridPos );
             challengePhaseData.tile.SetInteractable( true );
             challengePhaseData.tile.SetGhosted( false );
+            challengePhaseData.tile.GetComponent<TileComponent>().OnDragStart();
+            challengePhaseData.tile.GetComponent<Draggable>().ResetOffset();
         }
     }
 
@@ -189,7 +208,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
         currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
         EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
-
     }
 
     private void ChallengeSuccess( Vector2Int pos, TileComponent tile )
@@ -211,25 +229,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         tile.SetData( TileSource.Board, pos );
         tile.transform.SetParent( grid, false );
         tile.transform.localPosition = GetPositionOnGrid( pos );
-    }
-
-    private void ReenablePatterns( Vector2Int pos )
-    {
-        for( int i = 0; i < boardSize; ++i )
-        {
-            var curSide = GetCurrentSide( new Vector2Int( pos.x, i ), Side.Down );
-            if( curSide != null )
-                curSide.patternUsed = false;
-            curSide = GetCurrentSide( new Vector2Int( pos.x, i ), Side.Up );
-            if( curSide != null )
-                curSide.patternUsed = false;
-            curSide = GetCurrentSide( new Vector2Int( i, pos.y ), Side.Left );
-            if( curSide != null )
-                curSide.patternUsed = false;
-            curSide = GetCurrentSide( new Vector2Int( i, pos.y ), Side.Right );
-            if( curSide != null )
-                curSide.patternUsed = false;
-        }
     }
 
     public Vector2 GetPositionOnGrid( Vector2Int pos )
@@ -275,9 +274,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         if( highlights.ContainsKey( pos ) )
             return;
 
-        if( !IsAvailableSpot( pos ) )
-            return;
-
         var highlight = Instantiate( highlightTilePrefab );
         highlight.transform.SetParent( grid, false );
         highlight.transform.localPosition = GetPositionOnGrid( pos );
@@ -291,9 +287,30 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
         highlights = new Dictionary<Vector2Int, Image>();
 
+        foreach( var pos in GetAvailableSpots() )
+            HighlightAvailableSpot( pos );
+    }
+
+    public List<Vector2Int> GetAvailableSpots()
+    {
+        var spots = new List<Vector2Int>();
+        var tried = new HashSet<Vector2Int>();
+
         foreach( var (pos, _) in board )
+        {
             foreach( var direction in directions )
-                HighlightAvailableSpot( pos + direction );
+            {
+                var newPos = pos + direction;
+                if( !tried.Contains( newPos ) )
+                {
+                    if( IsAvailableSpot( newPos ) )
+                        spots.Add( newPos );
+                    tried.Add( newPos );
+                }
+            }
+        }
+
+        return spots;
     }
 
     public void RemoveHighlights()
@@ -386,7 +403,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             board.Add( pos, testCard );
 
         List<ScoreInfo> scoreResults = new List<ScoreInfo>();
-        scoreResults.AddRange( ScorePatternRule( pos, testCard == null ) );
+        scoreResults.AddRange( ScorePatternRule( pos ) );
         scoreResults.AddRange( ScoreOneSideRule( pos ) );
         scoreResults.AddRange( ScoreDiffRule( pos ) );
         scoreResults.AddRange( ScoreSameRule( pos ) );
@@ -495,7 +512,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         return results;
     }
 
-    private ScoreInfo ScorePatternRuleSide( Vector2Int pos, Side side, Vector2Int direction, bool consumePatterns )
+    private ScoreInfo ScorePatternRuleSide( Vector2Int pos, Side side, Vector2Int direction )
     {
         List<TileSide> sides = new List<TileSide>();
         int? value = null;
@@ -523,19 +540,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             sides.Add( next );
         }
 
-        if( consumePatterns )
-        {
-            var min = new Vector2Int( 
-                direction.x == 0 ? pos.x : boardSize / 2 * direction.x, 
-                direction.y == 0 ? pos.y : boardSize / 2 * direction.y );
-
-            for( int i = 0; i < boardSize; ++i )
-            {
-                if( ValidSide( GetCurrentSide( min + direction * i, side ), out var tile ) )
-                    tile.patternUsed = true;
-            }
-        }
-
         return new ScoreInfo()
         {
             score = GameConstants.Instance.patternExtraScore,
@@ -544,13 +548,13 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         };
     }
 
-    private List<ScoreInfo> ScorePatternRule( Vector2Int pos, bool consumePatterns )
+    private List<ScoreInfo> ScorePatternRule( Vector2Int pos )
     {
         List<ScoreInfo> results = new List<ScoreInfo>();
         foreach( var side in Utility.GetEnumValues<Side>() )
         {
-            var forwardPattern = ScorePatternRuleSide( pos, side, directions[side.Value()], consumePatterns );
-            var backwardPattern = ScorePatternRuleSide( pos, side.Opposite(), directions[side.Value()], consumePatterns );
+            var forwardPattern = ScorePatternRuleSide( pos, side, directions[side.Value()] );
+            var backwardPattern = ScorePatternRuleSide( pos, side.Opposite(), directions[side.Value()] );
             if( forwardPattern != null )
                 results.Add( forwardPattern );
             if( backwardPattern != null )
@@ -558,8 +562,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
             if( side == Side.Down || side == Side.Right )
             {
-                var forwardCentrePattern = ScorePatternRuleSide( pos - directions[side.Value()], side, directions[side.Value()], consumePatterns );
-                var backwardCentrePattern = ScorePatternRuleSide( pos - directions[side.Value()], side.Opposite(), directions[side.Value()], consumePatterns );
+                var forwardCentrePattern = ScorePatternRuleSide( pos - directions[side.Value()], side, directions[side.Value()] );
+                var backwardCentrePattern = ScorePatternRuleSide( pos - directions[side.Value()], side.Opposite(), directions[side.Value()] );
                 if( forwardCentrePattern != null )
                     results.Add( forwardCentrePattern );
                 if( backwardCentrePattern != null )

@@ -23,12 +23,14 @@ public class TextNumberAnimatorUI : MonoBehaviour
         if( numbers != null && !numbers.IsEmpty() )
             return;
 
+#if UNITY_EDITOR
         if( PrefabUtility.IsPartOfAnyPrefab( gameObject ) )
         {
             numbers = GetComponentsInChildren<TMPro.TextMeshProUGUI>().ToList();
             numbers = numbers.GetRange( 1, numbers.Count - 2 );
             return;
         }
+#endif
 
         baseNumber = GetComponentInChildren<TMPro.TextMeshProUGUI>();
         Debug.Assert( baseNumber.GetComponent<TextNumberAnimatorUI>() == null );

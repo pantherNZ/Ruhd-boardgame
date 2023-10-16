@@ -41,8 +41,7 @@ public class Draggable : MonoBehaviour
 
         dragging = true;
         startPos = transform.anchoredPosition;
-        var targetPos = GetMousePos();
-        offset = transform.anchoredPosition - new Vector2( targetPos.x, targetPos.y );
+        offset = transform.anchoredPosition - GetMousePos();
     }
 
     public void EndDrag()
@@ -55,6 +54,11 @@ public class Draggable : MonoBehaviour
         {
             transform.anchoredPosition = startPos;
         }
+    }
+
+    public void ResetOffset()
+    {
+        offset = GetMousePos();// - transform.localPosition.ToVector2();
     }
 
     public void ResetBackToDragStart()

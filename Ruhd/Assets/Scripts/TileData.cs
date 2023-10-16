@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
@@ -15,7 +16,6 @@ public class TileSide
     [ReadOnly] public int value;
     [ReadOnly] public int colour;
     [ReadOnly] public TileData card;
-    [ReadOnly] public bool patternUsed;
 
     public Side rotation { get => side.Rotate( card.owningComponent.rotation ); }
     [ReadOnly] public Side side;
@@ -45,6 +45,11 @@ static class SideUtil
     public static Side Rotate( this Side side, Side rotate )
     {
         return ( Side )Utility.Mod( side.Value() + rotate.Value(), 4 );
+    }
+
+    public static IEnumerable<Side> GetValues()
+    {
+        return Utility.GetEnumValues<Side>();
     }
 }
 

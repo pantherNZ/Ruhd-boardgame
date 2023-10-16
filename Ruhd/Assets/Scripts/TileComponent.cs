@@ -48,6 +48,7 @@ public class TileComponent : MonoBehaviour
     public bool draggable = true;
     private bool dragging;
     private bool interactable = true;
+    private string challenger;
 
     [HideInInspector] public Sprite backsideSprite;
     [SerializeField] GameObject ghostedSpritePrefab;
@@ -71,13 +72,13 @@ public class TileComponent : MonoBehaviour
         if( data != null )
             data.owningComponent = this;
 
-        GetComponent<TileHoverUI>().canHoverCheck = NetworkTurnCheck;
+        GetComponent<TileHoverUI>().canHoverCheck = TurnCheck;
     }
 
     public void SetInteractable( bool interactable )
     {
         this.interactable = interactable;
-        draggable = false;
+        draggable = interactable;
         GetComponent<EventDispatcherV2>().enabled = interactable;
         draggableCmp.enabled = interactable;
         hoverCmp.enabled = interactable;
@@ -101,6 +102,11 @@ public class TileComponent : MonoBehaviour
     public bool IsGhosted()
     {
         return ghostedSprite != null;
+    }
+
+    public void SetBeingChallenged( string challenger )
+    {
+        this.challenger = challenger;
     }
 
     public void SkipRotateInterpolation()
@@ -148,16 +154,15 @@ public class TileComponent : MonoBehaviour
         SkipRotateInterpolation();
     }
 
-    private bool NetworkTurnCheck()
+    private bool TurnCheck()
     {
-        return ( !NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer ) ||
-            ( localPlayerController && localPlayerController.isPlayerTurn );
+        return GameController.Instance.isLocalPlayerTurn || GameController.Instance.isLocalPlayerChallenging;
     }
 
     public void OnDragStart()
     {
         // Can only move when it's the local players turn
-        if( !NetworkTurnCheck() || !draggable )
+        if( !TurnCheck() || !draggable )
             return;
 
         draggableCmp.StartDrag();
@@ -168,7 +173,7 @@ public class TileComponent : MonoBehaviour
     public void OnDragEnd()
     {
         // Can only move when it's the local players turn
-        if( !NetworkTurnCheck() || !draggable )
+        if( !TurnCheck() || !draggable )
             return;
 
         hoverCmp.Unhover();
@@ -187,13 +192,13 @@ public class TileComponent : MonoBehaviour
 
         if( dragging )
         {
-            if( NetworkTurnCheck() && rotationInterp == null && Mathf.Abs( Input.mouseScrollDelta.y ) > 0.001f )
+            if( TurnCheck() && rotationInterp == null && Mathf.Abs( Input.mouseScrollDelta.y ) > 0.001f )
             {
                 SetRotation( ( Side )Utility.Mod( ( int )rotation + Mathf.RoundToInt( Mathf.Sign( Input.mouseScrollDelta.y ) ), 4 ), true );
             }
         }
 
-        hoverCmp.enabled = interactable && NetworkTurnCheck();
+        hoverCmp.enabled = interactable && TurnCheck();
     }
 
     // If inOpenHand is true, then position just uses the X for the index in the hand

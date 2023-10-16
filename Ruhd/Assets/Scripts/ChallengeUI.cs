@@ -9,7 +9,6 @@ public class ChallengeUI : EventReceiverInstance
     [SerializeField] Button challengeBtn;
     [SerializeField] BoardHandler boardHandler;
     private TMPro.TextMeshProUGUI timer;
-    private string currentPlayerturn;
 
     protected override void Start()
     {
@@ -22,19 +21,15 @@ public class ChallengeUI : EventReceiverInstance
         challengeBtn.onClick.RemoveAllListeners();
         challengeBtn.onClick.AddListener( () =>
         {
-            boardHandler.RequestChallengeServerRpc();
+            boardHandler.RequestChallenge( null );
         } );
     }
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is TurnStartEvent turnStart )
+        if( e is TilePlacedEvent tilePlaced )
         {
-            currentPlayerturn = turnStart.player;
-        }
-        else if( e is TilePlacedEvent tilePlaced )
-        {
-            if( NetworkManager.Singleton.GetComponent<NetworkHandler>().localPlayerData.name == currentPlayerturn )
+            if( GameController.Instance.isLocalPlayerTurn )
                 return;
 
             timerDisplay.SetActive( tilePlaced.waitingForChallenge );

@@ -23,6 +23,7 @@ public class DataHandler : MonoBehaviour
         return cachedCards;
     }
 
+#if UNITY_EDITOR
     [MenuItem( "Ruhd/Import Tiles" )]
     static void ImportTiles()
     {
@@ -61,4 +62,5 @@ public class DataHandler : MonoBehaviour
             AssetDatabase.DeleteAsset( path );
         }
     }
+#endif
 }

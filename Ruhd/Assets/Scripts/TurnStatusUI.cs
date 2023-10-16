@@ -1,16 +1,14 @@
-using Unity.Netcode;
 using UnityEngine;
 
 public class TurnStatusUI : EventReceiverInstance
 {
     [SerializeField] TMPro.TextMeshProUGUI label;
-    private bool localPlayerTurn = false;
 
     public override void OnEventReceived( IBaseEvent e )
     {
         if( e is TilePlacedEvent tilePlaced )
         {
-            if( localPlayerTurn )
+            if( GameController.Instance.isLocalPlayerTurn )
             {
                 if( tilePlaced.successfullyPlaced )
                     label.text = "PLACE A TILE";
@@ -24,10 +22,7 @@ public class TurnStatusUI : EventReceiverInstance
         }
         else if( e is TurnStartEvent turnStart )
         {
-            var localPlayerName = NetworkManager.Singleton.GetComponent<NetworkHandler>().localPlayerData.name;
-            localPlayerTurn = turnStart.player == localPlayerName;
-
-            if( localPlayerTurn )
+            if( GameController.Instance.isLocalPlayerTurn )
             {
                 label.text = "PLACE A TILE";
             }

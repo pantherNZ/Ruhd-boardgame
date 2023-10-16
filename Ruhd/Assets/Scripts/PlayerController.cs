@@ -9,6 +9,7 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
     public bool isPlayerTurn = false;
     public ulong clientId;
     public string playerName;
+    public string playerTurn;
     private NetworkHandler networkHandler;
 
     protected void Start()
@@ -47,6 +48,7 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
     {
         if( e is TurnStartEvent turnStart )
         {
+            playerTurn = turnStart.player;
             isPlayerTurn = turnStart.player == networkHandler.localPlayerData.name;
         }
         else if( e is StartGameEvent startgame )
