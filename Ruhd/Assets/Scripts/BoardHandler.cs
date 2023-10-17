@@ -266,6 +266,10 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
         if( board.ContainsKey( pos ) )
             return false;
+
+        if( challengePhaseData != null && pos == challengePhaseData.gridPos )
+            return false;
+
         return directions.Any( x => board.ContainsKey( pos + x ) );
     }
 

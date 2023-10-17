@@ -173,6 +173,9 @@ MonoBehaviour:
         m_CallState: 2
   OnPointerDownEvent:
     m_PersistentCalls:
+      m_Calls: []
+  OnPointerUpEvent:
+    m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 7202196149287480583}
         m_TargetAssemblyTypeName: TileComponent, Assembly-CSharp
@@ -186,9 +189,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  OnPointerUpEvent:
-    m_PersistentCalls:
-      m_Calls: []
   doubleClickInterval: 0.5
   doubleClickUsePointerUp: 0
   OnDoubleClickEvent:

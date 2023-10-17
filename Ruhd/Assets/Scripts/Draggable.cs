@@ -6,6 +6,7 @@ public class Draggable : MonoBehaviour
     [SerializeField] Canvas canvas;
     private bool dragging;
     private Vector2 offset, startPos;
+    private Camera mainCam;
 
     new RectTransform transform;
     public Action<Draggable, Vector3> updatePosition;
@@ -15,6 +16,7 @@ public class Draggable : MonoBehaviour
     void Start()
     {
         transform = base.transform as RectTransform;
+        mainCam = Camera.main;
     }
 
     public void AssignCanvas( Canvas canvas )
@@ -22,12 +24,11 @@ public class Draggable : MonoBehaviour
         this.canvas = canvas;
     }
 
-    private Vector2 GetMousePos()
+    public Vector2 GetMousePos()
     {
         if( canvas != null )
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvas.transform as RectTransform, Utility.GetMouseOrTouchPos(), Camera.main, out var localPos );
+            RectTransformUtility.ScreenPointToLocalPointInRectangle( canvas.transform as RectTransform, Utility.GetMouseOrTouchPos(), mainCam, out var localPos );
             return localPos;
         }
 
@@ -58,7 +59,10 @@ public class Draggable : MonoBehaviour
 
     public void ResetOffset()
     {
-        offset = GetMousePos();// - transform.localPosition.ToVector2();
+        transform.anchoredPosition = Vector2.zero;
+        transform.ForceUpdateRectTransforms();
+        RectTransformUtility.ScreenPointToLocalPointInRectangle( canvas.transform as RectTransform, RectTransformUtility.WorldToScreenPoint( mainCam, transform.position ), mainCam, out var localPos );
+        offset = -localPos;
     }
 
     public void ResetBackToDragStart()
