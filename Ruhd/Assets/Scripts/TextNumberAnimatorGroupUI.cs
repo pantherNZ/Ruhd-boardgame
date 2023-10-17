@@ -12,7 +12,7 @@ public class TextNumberAnimatorGroupUI : MonoBehaviour
 
     void Start()
     {
-        children = GetComponentsInChildren<TextNumberAnimatorUI>().ToList();
+        children = GetComponentsInChildren<TextNumberAnimatorUI>( true ).ToList();
         internalValue = null;
     }
 
