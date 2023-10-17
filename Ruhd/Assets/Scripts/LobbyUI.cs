@@ -16,6 +16,7 @@ public class LobbyUI : EventReceiverInstance
 
     private TMPro.TextMeshProUGUI toggleReadyLabel;
     private bool localIsReady = false;
+    private string lobbyCode;
 
     protected override void Start()
     {
@@ -36,7 +37,8 @@ public class LobbyUI : EventReceiverInstance
         if( e is LobbyUpdatedEvent lobbyUpdated )
         {
             bool multiplePlayers = lobbyUpdated.playerData.Count > 1;
-            codeLabel.text = lobbyUpdated.lobby.LobbyCode;
+            lobbyCode = lobbyUpdated.lobby.LobbyCode;
+            codeLabel.text = lobbyCode;
             var playersList = new StringBuilder();
             playersList.AppendJoin( '\n', lobbyUpdated.playerData.Select( x => x.name ) );
             if( !multiplePlayers )
@@ -50,5 +52,16 @@ public class LobbyUI : EventReceiverInstance
                 lobbyUpdated.playerData.All( x => x.isReady );
             startGameBtn.gameObject.SetActive( canStartGame );
         }
+    }
+
+    public void CopyCodeToClipboard()
+    {
+        lobbyCode.CopyToClipboard();
+    }
+
+    public void InterpCodeToScale( float scale )
+    {
+        StopAllCoroutines();
+        this.InterpolateScale( codeLabel.transform, new Vector3( scale, scale, scale ), 0.3f, Utility.Easing.Elastic.InOut );
     }
 }
