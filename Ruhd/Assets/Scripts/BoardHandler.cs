@@ -82,9 +82,21 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             return true;
         }
 
+        // Valid placement from challenge, compare to the original move
+        if( validPlacement && challengePhaseData != null )
+        {
+            List<ScoreInfo> scoreResults = EvaluateScore( gridPos, challengePhaseData.tile );
+            if( scoreResults.Sum( x => x.score ) <= challengePhaseData.scoreTotal )
+            {
+                ChallengeFailed();
+                return true;
+            }
+        }
+
         if( validPlacement )
         {
-            List<ScoreInfo> scoreResults = EvaluateScore( challengePhaseData != null ? challengePhaseData.gridPos : gridPos, challengePhaseData?.tile );
+            PlaceTile( tile, gridPos );
+            List<ScoreInfo> scoreResults = EvaluateScore( gridPos, null );
 
             if( scoreResults != null && scoreResults.Count > 0 )
             {
@@ -99,9 +111,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         }
 
         if( challengePhaseData != null )
-        {
             ChallengeSuccess( challengePhaseData.gridPos, challengePhaseData.tile );
-        }
 
         return validPlacement;
     }
@@ -180,12 +190,20 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         }
     }
 
-    private void ChallengeFailed()
+    private void ChallengeCleanup()
     {
         Debug.Assert( challengePhaseData != null );
-        var data = challengePhaseData;
-        data.tile.SetGhosted( false );
         challengePhaseData = null;
+        challengeTimer.Stop();
+    }
+
+    private void ChallengeFailed()
+    {
+        var data = challengePhaseData;
+        if( challengePhaseData.challenger != null )
+            PlaceTile( data.tile, data.gridPos );
+        data.tile.SetGhosted( false );
+        ChallengeCleanup();
 
         EventSystem.Instance.TriggerEvent( new TilePlacedEvent()
         {
@@ -206,15 +224,22 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             } );
         }
 
-        currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
-        EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
+        NextTurn();
     }
 
     private void ChallengeSuccess( Vector2Int pos, TileComponent tile )
     {
-        Debug.Assert( challengePhaseData != null );
-        challengePhaseData = null;
-        EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
+        ChallengeCleanup();
+        NextTurn();
+    }
+
+    private void NextTurn()
+    {
+        Utility.FunctionTimer.CreateTimer( GameConstants.Instance.turnChangeDelaySec, () =>
+        {
+            currentPlayerturn = players[( players.FindIndex( x => x == currentPlayerturn ) + 1 ) % players.Count];
+            EventSystem.Instance.TriggerEvent( new TurnStartEvent() { player = currentPlayerturn } );
+        } );
     }
 
     private void PlaceTile( TileComponent tile, Vector2Int pos )

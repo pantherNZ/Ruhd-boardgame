@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 class GameController : EventReceiverInstance
 {
-    [SerializeField] AIPlayerController AIControllerPrefab;
+    [SerializeField] AIController AIControllerPrefab;
 
-    private List<AIPlayerController> AIPlayers = new List<AIPlayerController>();
+    private List<AIController> AIPlayers = new List<AIController>();
 
     static GameController _Instance;
     static public GameController Instance

@@ -12,6 +12,9 @@ public class GameConstants : ScriptableObject
     public float challengeStartTimerSec = 5.0f;
     public float challengeStartTimerSecLocal = 2.0f;
     public float challengeActionTimerSec = 10.0f;
+    public float AIThinkTimeMinSec = 1.0f;
+    public float AIThinkTimeMaxSec = 3.0f;
+    public float turnChangeDelaySec = 2.0f;
 
     private static GameConstants _Instance;
     public static GameConstants Instance
