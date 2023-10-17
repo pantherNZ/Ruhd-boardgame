@@ -141,6 +141,14 @@ public class MenuUI : EventReceiverInstance
                 rectTransform.anchorMax = new Vector2( 0.5f, 0.5f );
                 rectTransform.anchoredPosition = newPosition;
 
+                tile.GetComponent<EventDispatcherV2>().OnPointerUpEvent.AddListener( x =>
+                {
+                    if( Utility.RandomBool() )
+                        RotateTileRandomly( tile.gameObject );
+                    else
+                        SwapTileRandomly( tile.gameObject );
+                } );
+
                 if( cameraRect.Contains( newPosition ) && !( y >= -2 && y < 2 && x >= -3 && x < 3 ) )
                     validTiles.Add( tile.gameObject );
 
@@ -187,13 +195,19 @@ public class MenuUI : EventReceiverInstance
             if( tile == null )
                 continue;
             yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
-            var otherTileIdx = GetRandomNeighbour( randomTileIdx );
-            var other = grid[otherTileIdx];
-            swapTilesRoutine1 = StartCoroutine( Utility.InterpolatePosition( tile.transform, other.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
-            swapTilesRoutine2 = StartCoroutine( Utility.InterpolatePosition( other.transform, tile.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
-            grid[randomTileIdx] = other;
-            grid[otherTileIdx] = tile;
+            SwapTileRandomly( tile );
         }
+    }
+
+    public void SwapTileRandomly( GameObject tile )
+    {
+        var tileIdx = grid.FindIndex( x => x == tile );
+        var otherTileIdx = GetRandomNeighbour( tileIdx );
+        var other = grid[otherTileIdx];
+        swapTilesRoutine1 = StartCoroutine( Utility.InterpolatePosition( tile.transform, other.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
+        swapTilesRoutine2 = StartCoroutine( Utility.InterpolatePosition( other.transform, tile.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
+        grid[tileIdx] = other;
+        grid[otherTileIdx] = tile;
     }
 
     private IEnumerator RotateTilesRandomly()
@@ -201,10 +215,14 @@ public class MenuUI : EventReceiverInstance
         while( true )
         {
             yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
-            var tile = validTiles.RandomItem();
-            var rotation = new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) * ( Utility.RandomBool() ? 2 : 1 ) );
-            this.InterpolateRotation( tile.transform, rotation, easingSpeedRotate, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
+            RotateTileRandomly( validTiles.RandomItem() );
         }
+    }
+
+    public void RotateTileRandomly( GameObject tile )
+    {
+        var rotation = new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) * ( Utility.RandomBool() ? 2 : 1 ) );
+        this.InterpolateRotation( tile.transform, rotation, easingSpeedRotate, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
     }
 
     private void ReplaceTile( GameObject replacee, GameObject prefab, bool resetRotation )
