@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-public class AIPlayerController : EventReceiverInstance
+public class AIController : EventReceiverInstance
 {
     [HideInInspector] public BoardHandler board;
     [HideInInspector] public DeckHandler deck;
@@ -16,7 +16,7 @@ public class AIPlayerController : EventReceiverInstance
         {
             if( turnStart.player == playerName )
             {
-                ProcessAI();
+                Utility.FunctionTimer.CreateTimer( Random.Range( GameConstants.Instance.AIThinkTimeMinSec, GameConstants.Instance.AIThinkTimeMaxSec ), ProcessAI );
             }
         }
     }
