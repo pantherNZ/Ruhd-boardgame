@@ -369,7 +369,7 @@ public class MenuUI : EventReceiverInstance
         {
             if( tile == null )
                 continue;
-            tile.GetComponent<TileComponent>().SetInteractable( false );
+            tile.GetComponent<EventDispatcherV2>().enabled = false;
             var expandedRect = Camera.main.pixelRect;
             expandedRect.size += cellSize * 2.0f;
             var originPos = tile.transform.localPosition;
@@ -384,7 +384,7 @@ public class MenuUI : EventReceiverInstance
 
             Utility.FunctionTimer.CreateTimer( delay + Random.Range( -0.1f, 0.1f ), () =>
             {
-                InterpolatePosition( tile.transform, show ? originPos : exitPosition, menuFadeOutTimeSec + Random.Range( -0.1f, 0.1f ), true, Utility.Easing.Quintic.In );
+                StartCoroutine( Utility.InterpolatePosition( tile.transform, show ? originPos : exitPosition, menuFadeOutTimeSec + Random.Range( -0.1f, 0.1f ), true, Utility.Easing.Quintic.In ) );
             } );
         }
 
