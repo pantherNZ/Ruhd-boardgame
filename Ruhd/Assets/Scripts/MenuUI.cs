@@ -43,6 +43,7 @@ public class MenuUI : EventReceiverInstance
     [SerializeField] float menuFadeOutTimeSec = 1.0f;
     [SerializeField] float menuFadeOutDelaySec = 1.0f;
     [SerializeField] float menuFadeOutDelayPerTileSec = 0.002f;
+    [SerializeField] Utility.ShakeParams shake;
 
     private List<GameObject> grid = new List<GameObject>();
     private List<GameObject> validTiles = new List<GameObject>();
@@ -60,6 +61,7 @@ public class MenuUI : EventReceiverInstance
     private Coroutine swapTilesRoutine;
     private Coroutine swapTilesRoutine1;
     private Coroutine swapTilesRoutine2;
+    private List<Transform> movingTiles = new List<Transform>();
 
     private bool interactable = true;
 
@@ -143,10 +145,15 @@ public class MenuUI : EventReceiverInstance
 
                 tile.GetComponent<EventDispatcherV2>().OnPointerUpEvent.AddListener( x =>
                 {
-                    if( Utility.RandomBool() )
-                        RotateTileRandomly( tile.gameObject );
-                    else
-                        SwapTileRandomly( tile.gameObject );
+                    if( gameObject.activeSelf )
+                    {
+                        switch( Random.Range( 0, 3 ) )
+                        {
+                            case 0: RotateTileRandomly( tile.gameObject ); break;
+                            case 1: SwapTileRandomly( tile.gameObject ); break;
+                            case 2: StartCoroutine( Shake( tile.transform ) ); break;
+                        }
+                    }
                 } );
 
                 if( cameraRect.Contains( newPosition ) && !( y >= -2 && y < 2 && x >= -3 && x < 3 ) )
@@ -186,6 +193,16 @@ public class MenuUI : EventReceiverInstance
         return options.RandomItem();
     }
 
+    public IEnumerator Shake( Transform transform )
+    {
+        if( !movingTiles.Contains( transform ) )
+        {
+            movingTiles.Add( transform );
+            yield return Utility.Shake( transform, shake );
+            movingTiles.Remove( transform );
+        }
+    }
+
     private IEnumerator SwapTilesRandomly()
     {
         while( true )
@@ -194,20 +211,36 @@ public class MenuUI : EventReceiverInstance
             var tile = grid[randomTileIdx];
             if( tile == null )
                 continue;
-            yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
             SwapTileRandomly( tile );
+            yield return new WaitForSeconds( Random.Range( tileMoveTimerMin, tileMoveTimerMax ) );
         }
     }
 
     public void SwapTileRandomly( GameObject tile )
     {
-        var tileIdx = grid.FindIndex( x => x == tile );
-        var otherTileIdx = GetRandomNeighbour( tileIdx );
-        var other = grid[otherTileIdx];
-        swapTilesRoutine1 = StartCoroutine( Utility.InterpolatePosition( tile.transform, other.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
-        swapTilesRoutine2 = StartCoroutine( Utility.InterpolatePosition( other.transform, tile.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
-        grid[tileIdx] = other;
-        grid[otherTileIdx] = tile;
+        if( !movingTiles.Contains( tile.transform ) )
+        {
+            var tileIdx = grid.FindIndex( x => x == tile );
+            var otherTileIdx = GetRandomNeighbour( tileIdx );
+            var other = grid[otherTileIdx];
+            if( !movingTiles.Contains( other.transform ) )
+            {
+                swapTilesRoutine1 = StartCoroutine( InterpolatePosition( tile.transform, other.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
+                swapTilesRoutine2 = StartCoroutine( InterpolatePosition( other.transform, tile.transform.localPosition, easingSpeedMove, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
+                grid[tileIdx] = other;
+                grid[otherTileIdx] = tile;
+            }
+        }
+    }
+
+    private IEnumerator InterpolatePosition( Transform transform, Vector3 targetPosition, float durationSec, bool localPosition, Utility.EasingFunction easingFunction )
+    {
+        if( !movingTiles.Contains( transform ) )
+        {
+            movingTiles.Add( transform );
+            yield return Utility.InterpolatePosition( transform, targetPosition, durationSec, localPosition, easingFunction );
+            movingTiles.Remove( transform );
+        }
     }
 
     private IEnumerator RotateTilesRandomly()
@@ -222,7 +255,17 @@ public class MenuUI : EventReceiverInstance
     public void RotateTileRandomly( GameObject tile )
     {
         var rotation = new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) * ( Utility.RandomBool() ? 2 : 1 ) );
-        this.InterpolateRotation( tile.transform, rotation, easingSpeedRotate, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) );
+        StartCoroutine( InterpolateRotation( tile.transform, rotation, easingSpeedRotate, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
+    }
+
+    private IEnumerator InterpolateRotation( Transform transform, Vector3 rotation, float durationSec, bool localRotation, Utility.EasingFunction easingFunction)
+    {
+        if( !movingTiles.Contains( transform ) )
+        {
+            movingTiles.Add( transform );
+            yield return Utility.InterpolateRotation( transform, rotation, durationSec, localRotation, easingFunction );
+            movingTiles.Remove( transform );
+        }
     }
 
     private void ReplaceTile( GameObject replacee, GameObject prefab, bool resetRotation )
@@ -326,6 +369,7 @@ public class MenuUI : EventReceiverInstance
         {
             if( tile == null )
                 continue;
+            tile.GetComponent<TileComponent>().SetInteractable( false );
             var expandedRect = Camera.main.pixelRect;
             expandedRect.size += cellSize * 2.0f;
             var originPos = tile.transform.localPosition;
@@ -340,7 +384,7 @@ public class MenuUI : EventReceiverInstance
 
             Utility.FunctionTimer.CreateTimer( delay + Random.Range( -0.1f, 0.1f ), () =>
             {
-                this.InterpolatePosition( tile.transform, show ? originPos : exitPosition, menuFadeOutTimeSec + Random.Range( -0.1f, 0.1f ), true, Utility.Easing.Quintic.In );
+                InterpolatePosition( tile.transform, show ? originPos : exitPosition, menuFadeOutTimeSec + Random.Range( -0.1f, 0.1f ), true, Utility.Easing.Quintic.In );
             } );
         }
 

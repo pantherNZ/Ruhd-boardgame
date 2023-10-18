@@ -10169,6 +10169,12 @@ MonoBehaviour:
   menuFadeOutTimeSec: 1
   menuFadeOutDelaySec: 0
   menuFadeOutDelayPerTileSec: 0.2
+  shake:
+    durationSec: 0.5
+    amplitudeStart: 15
+    amplitudeEnd: 0
+    frequency: 40
+    yMultiplier: 1.2
 --- !u!114 &2077546459
 MonoBehaviour:
   m_ObjectHideFlags: 0
