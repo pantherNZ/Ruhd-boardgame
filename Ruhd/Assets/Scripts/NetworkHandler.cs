@@ -103,7 +103,7 @@ public class NetworkHandler : MonoBehaviour
     {
         var data = new Dictionary<string, DataObject>
         {
-            { RngSeedKey, new DataObject( DataObject.VisibilityOptions.Member, GameConstants.Instance.rngSeed.ToString() ) }
+            { RngSeedKey, new DataObject( DataObject.VisibilityOptions.Member, GameController.Instance.rngSeedRuntime.ToString() ) }
         };
         if( gameStartJoinCode != null )
             data.Add( RelayJoinCodeKey, new DataObject( DataObject.VisibilityOptions.Member, gameStartJoinCode ) );
@@ -225,7 +225,7 @@ public class NetworkHandler : MonoBehaviour
                 playerData = GetPlayerData(),
             } );
             ListenForLobbyUpdates();
-            GameConstants.Instance.rngSeedRuntime = int.Parse( lobby.Data[RngSeedKey].Value );
+            GameController.Instance.InitRng( int.Parse( lobby.Data[RngSeedKey].Value ) );
 
             if( lobby.Data.TryGetValue( RelayJoinCodeKey, out var joinCode ) )
             {

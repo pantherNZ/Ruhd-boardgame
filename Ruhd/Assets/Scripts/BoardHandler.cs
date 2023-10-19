@@ -363,10 +363,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         {
             TileDropped( tilePlacedEvent );
         }
-        else if( e is PreStartGameEvent )
-        {
-            Random.InitState( GameConstants.Instance.rngSeedRuntime );
-        }
         else if( e is StartGameEvent startGame )
         {
             ResetGame( startGame.playerData.Select( x => x.name ).ToList() );
@@ -406,6 +402,13 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         return TryPlaceTile( tileCmp, gridPos );
     }
 
+    // Used by AI to send move to all clients
+    public void TryPlaceTileServer( TileComponent tile, Vector2Int gridPos )
+    {
+        Debug.Assert( NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost );
+        TileDroppedClientRpc( tile.networkData, gridPos );
+    }
+
     [ServerRpc( RequireOwnership = false )]
     private void TileDroppedRequestServerRpc( TileNetworkData tile, Vector2Int gridPos, ServerRpcParams rpcParams = default )
     {
@@ -421,7 +424,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     }
 
     [ClientRpc]
-    private void TileDroppedClientRpc( TileNetworkData tile, Vector2Int gridPos, ClientRpcParams rpcParams = default )
+    public void TileDroppedClientRpc( TileNetworkData tile, Vector2Int gridPos, ClientRpcParams rpcParams = default )
     {
         TryPlaceTileOtherPlayer( tile, gridPos );
     }

@@ -254,7 +254,7 @@ public class MenuUI : EventReceiverInstance
 
     public void RotateTileRandomly( GameObject tile )
     {
-        var rotation = new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.RandomBool() ? 1 : -1 ) * ( Utility.RandomBool() ? 2 : 1 ) );
+        var rotation = new Vector3( 0.0f, 0.0f, 90.0f * ( Utility.DefaultRng.Bool() ? 1 : -1 ) * ( Utility.DefaultRng.Bool() ? 2 : 1 ) );
         StartCoroutine( InterpolateRotation( tile.transform, rotation, easingSpeedRotate, true, Utility.FetchEasingFunction( easingFunction, easingMethod ) ) );
     }
 

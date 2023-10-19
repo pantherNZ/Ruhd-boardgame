@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Netcode;
 
 public class AIController : EventReceiverInstance
 {
@@ -14,9 +15,11 @@ public class AIController : EventReceiverInstance
     {
         if( e is TurnStartEvent turnStart )
         {
+            // Only process AI on our turn and on the server (or local game)
             if( turnStart.player == playerName )
             {
-                Utility.FunctionTimer.CreateTimer( Random.Range( GameConstants.Instance.AIThinkTimeMinSec, GameConstants.Instance.AIThinkTimeMaxSec ), ProcessAI );
+                if( GameController.Instance.isOfflineGame || NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost )
+                    Utility.FunctionTimer.CreateTimer( Random.Range( GameConstants.Instance.AIThinkTimeMinSec, GameConstants.Instance.AIThinkTimeMaxSec ), ProcessAI );
             }
         }
     }
@@ -55,13 +58,12 @@ public class AIController : EventReceiverInstance
             }
         }
 
-
         moves.Sort( ( a, b ) => a.score - b.score );
-        var moveSelection = Mathf.Clamp( Utility.RandomGaussian( difficulty, deviation ), 0.0f, 1.0f );
+        var moveSelection = Mathf.Clamp( Utility.DefaultRng.Gaussian( difficulty, deviation ), 0.0f, 1.0f );
         var move = moves[Mathf.RoundToInt( moveSelection * ( moves.Count - 1 ) )];
         move.tile.rotation = move.rot;
         EventSystem.Instance.TriggerEvent( new TileSelectedEvent() { tile = move.tile } );
-        board.TryPlaceTile( move.tile, move.pos );
+        board.TryPlaceTileServer( move.tile, move.pos );
         Debug.Log( $"AI MOVE: Pos: {move.pos}, Rot: {move.rot}, Score:{move.score}" );
     }
 }

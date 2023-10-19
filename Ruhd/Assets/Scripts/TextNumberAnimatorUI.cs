@@ -47,7 +47,7 @@ public class TextNumberAnimatorUI : MonoBehaviour
             }
         }
 
-        inBottomSet = Utility.RandomBool();
+        inBottomSet = Utility.DefaultRng.Bool();
 
         for( int i = 0; i <= 20; ++i )
         {
