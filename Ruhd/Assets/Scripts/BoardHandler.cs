@@ -52,10 +52,10 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
                 tile.DestroyObject();
 
         board = new Dictionary<Vector2Int, TileComponent>();
-        PlaceTile( deck.DrawTile( true ), new Vector2Int( 0, 1 ) );
-        PlaceTile( deck.DrawTile( true ), new Vector2Int( 0, 0 ) );
-        PlaceTile( deck.DrawTile( true ), new Vector2Int( 1, 0 ) );
-        PlaceTile( deck.DrawTile( true ), new Vector2Int( 1, 1 ) );
+        PlaceTile( deck.DrawTile( GameController.Instance.gameRandom ), new Vector2Int( 0, 1 ) );
+        PlaceTile( deck.DrawTile( GameController.Instance.gameRandom ), new Vector2Int( 0, 0 ) );
+        PlaceTile( deck.DrawTile( GameController.Instance.gameRandom ), new Vector2Int( 1, 0 ) );
+        PlaceTile( deck.DrawTile( GameController.Instance.gameRandom ), new Vector2Int( 1, 1 ) );
 
         players = playerNames;
         currentPlayerturn = players[0]; // Assume 0 is the host/first player, maybe randomise?

@@ -20,17 +20,17 @@ public class DeckHandler : EventReceiverInstance
         base.Start();
     }
 
-    public void Reset( int numPlayers )
+    public void Reset( int numPlayers, Utility.IRandom rng )
     {
         this.numPlayers = numPlayers;
         openHand = new List<TileComponent>();
         allTiles = new List<TileData>();
         foreach( var card in DataHandler.GetAllCards() )
             allTiles.Add( Instantiate( card ) );
-        allTiles.RandomShuffle();
+        allTiles.RandomShuffle( rng );
 
         for( int i = 0; i < GetNumStartingCards(); ++i )
-            DrawCardToOpenHand();
+            DrawCardToOpenHand( rng );
     }
 
     public bool IsDeckEmpty()
@@ -48,7 +48,7 @@ public class DeckHandler : EventReceiverInstance
         return openHand.Find( x => x.networkData == tile );
     }
 
-    public TileComponent DrawTile( bool randomRotation )
+    public TileComponent DrawTile( Utility.IRandom rng )
     {
         var cardData = allTiles.PopBack();
         var newCard = Instantiate( tilePrefab );
@@ -59,15 +59,15 @@ public class DeckHandler : EventReceiverInstance
         var sprite = Resources.Load<Sprite>( cardData.imagePath );
         newCard.GetComponent<Image>().sprite = Instantiate( sprite );
 
-        if( randomRotation )
-            newCard.rotation = Utility.GetEnumValues<Side>().RandomItem();
+        if( rng != null )
+            newCard.rotation = Utility.GetEnumValues<Side>().RandomItem( rng: rng );
 
         return newCard;
     }
 
-    public void DrawCardToOpenHand()
+    public void DrawCardToOpenHand( Utility.IRandom rng )
     {
-        var newCard = DrawTile( true );
+        var newCard = DrawTile( rng );
         newCard.SetData( TileSource.Hand, new Vector2Int( openHand.Count, 0 ) );
         openHand.Add( newCard );
         newCard.transform.SetParent( slotsPanelUI.transform, false );
@@ -82,7 +82,7 @@ public class DeckHandler : EventReceiverInstance
     {
         if( e is StartGameEvent startGameEvent )
         {
-            Reset( startGameEvent.playerData.Count );
+            Reset( startGameEvent.playerData.Count, GameController.Instance.gameRandom );
         }
         else if( e is TileSelectedEvent tileSelectedEvent )
         {
@@ -121,7 +121,7 @@ public class DeckHandler : EventReceiverInstance
                     if( !allTiles.IsEmpty() )
                     {
                         for( int i = 0; i < GetNumStartingCards(); ++i )
-                            DrawCardToOpenHand();
+                            DrawCardToOpenHand( GameController.Instance.gameRandom );
                     }
                     else
                     {

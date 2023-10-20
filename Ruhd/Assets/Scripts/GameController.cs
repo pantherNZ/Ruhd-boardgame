@@ -15,7 +15,7 @@ class GameController : EventReceiverInstance
     }
 
     [HideInInspector] public int rngSeedRuntime;
-    [HideInInspector] public System.Random gameRandom;
+    [HideInInspector] public Utility.SystemRandom gameRandom;
     [HideInInspector] public string currentPlayerTurn;
     [HideInInspector] public string localPlayerName;
     [HideInInspector] public string currentChallenger;
@@ -30,15 +30,13 @@ class GameController : EventReceiverInstance
         base.Start();
 
         _Instance = this;
-
-        var seed = GameConstants.Instance.rngSeed;
-        InitRng( seed == 0 ? Random.Range( 0, int.MaxValue ) : seed );
     }
 
-    public void InitRng( int seed )
+    public void InitRng( int? seedOverride = null )
     {
-        rngSeedRuntime = seed;
-        gameRandom = new System.Random( rngSeedRuntime );
+        var fixedSeed = GameConstants.Instance.rngSeed;
+        rngSeedRuntime = seedOverride ?? ( fixedSeed == 0 ? Random.Range( 0, int.MaxValue ) : fixedSeed );
+        gameRandom = new Utility.SystemRandom( rngSeedRuntime );
     }
 
     public override void OnEventReceived( IBaseEvent e )

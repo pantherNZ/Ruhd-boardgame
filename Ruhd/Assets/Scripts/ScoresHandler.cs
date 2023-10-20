@@ -115,9 +115,8 @@ public class ScoresHandler : EventReceiverInstance
         var scoreDisplay = Instantiate( scoreGainedUIPrefab, transform );
         var text = scoreDisplay.GetComponentInChildren<TMPro.TextMeshProUGUI>();
         text.text = $"+{scoreModifier.score} ({ScoreSourceNames[( int )scoreModifier.source]})";
-        var tileTransform = scoreModifier.sides.Back().card.owningComponent.transform;
         var interpDown = placedTileTransform.anchoredPosition.y > -0.15f * ( placedTileTransform.parent as RectTransform ).rect.height;
-        scoreDisplay.transform.localPosition = transform.InverseTransformPoint( tileTransform.position );
+        scoreDisplay.transform.localPosition = transform.InverseTransformPoint( placedTileTransform.position );
         yield return Utility.InterpolatePosition( scoreDisplay.transform, scoreDisplay.transform.localPosition + new Vector3( 0.0f, interpDown ? -200.0f : 200.0f, 0.0f ), 1.0f, true, Utility.Easing.Linear );
         const float textLineHeight = 50.0f;
         var scoreBoardPos = ( scoresList.transform as RectTransform ).rect.TopRight().ToVector3();

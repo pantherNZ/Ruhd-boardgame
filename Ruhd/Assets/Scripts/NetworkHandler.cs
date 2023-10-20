@@ -122,6 +122,7 @@ public class NetworkHandler : MonoBehaviour
             var serverData = new RelayServerData( allocation, RelayConnectionType );
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData( serverData );
             var joinCode = await RelayService.Instance.GetJoinCodeAsync( allocation.AllocationId );
+            GameController.Instance.InitRng();
 
             var lobbyOptions = new CreateLobbyOptions()
             {

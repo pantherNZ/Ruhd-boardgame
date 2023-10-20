@@ -131,10 +131,10 @@ public class MenuUI : EventReceiverInstance
                 }
 
                 if( deck.IsDeckEmpty() )
-                    deck.Reset( 10 );
+                    deck.Reset( 10, Utility.DefaultRng );
 
                 var newPosition = GetPosition( new Vector2Int( x, y ) );
-                var tile = deck.DrawTile( true );
+                var tile = deck.DrawTile( Utility.DefaultRng );
                 tile.draggable = false;
                 grid.Add( tile.gameObject );
                 tile.transform.SetParent( background.transform, false );
