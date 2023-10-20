@@ -71,7 +71,7 @@ public class ScoresHandler : EventReceiverInstance
             {
                 Utility.FunctionTimer.CreateTimer( 1.5f * idx, () =>
                 {
-                    StartCoroutine( CreateScoreDisplayUI( scoreInfo, playerIdx ) );
+                    StartCoroutine( CreateScoreDisplayUI( scoreInfo, playerIdx, scoreEvent.placedTile.transform as RectTransform ) );
                 } );
             }
         }
@@ -97,7 +97,7 @@ public class ScoresHandler : EventReceiverInstance
         Utility.FunctionTimer.CreateTimer( 1.0f, () => highlight.Destroy() );
     }
 
-    private IEnumerator CreateScoreDisplayUI( ScoreInfo scoreModifier, int playerIdx )
+    private IEnumerator CreateScoreDisplayUI( ScoreInfo scoreModifier, int playerIdx, RectTransform placedTileTransform )
     {
         yield return new WaitForSeconds( 0.2f );
 
@@ -115,8 +115,10 @@ public class ScoresHandler : EventReceiverInstance
         var scoreDisplay = Instantiate( scoreGainedUIPrefab, transform );
         var text = scoreDisplay.GetComponentInChildren<TMPro.TextMeshProUGUI>();
         text.text = $"+{scoreModifier.score} ({ScoreSourceNames[( int )scoreModifier.source]})";
-        scoreDisplay.transform.localPosition = transform.InverseTransformPoint( scoreModifier.sides.Back().card.owningComponent.transform.position );
-        yield return Utility.InterpolatePosition( scoreDisplay.transform, scoreDisplay.transform.localPosition + new Vector3( 0.0f, 200.0f, 0.0f ), 1.0f, true, Utility.Easing.Linear );
+        var tileTransform = scoreModifier.sides.Back().card.owningComponent.transform;
+        var interpDown = placedTileTransform.anchoredPosition.y > -0.15f * ( placedTileTransform.parent as RectTransform ).rect.height;
+        scoreDisplay.transform.localPosition = transform.InverseTransformPoint( tileTransform.position );
+        yield return Utility.InterpolatePosition( scoreDisplay.transform, scoreDisplay.transform.localPosition + new Vector3( 0.0f, interpDown ? -200.0f : 200.0f, 0.0f ), 1.0f, true, Utility.Easing.Linear );
         const float textLineHeight = 50.0f;
         var scoreBoardPos = ( scoresList.transform as RectTransform ).rect.TopRight().ToVector3();
         Utility.FunctionTimer.CreateTimer( 0.5f, () => this.FadeToColour( text, Color.clear, 0.5f, null, true ) );

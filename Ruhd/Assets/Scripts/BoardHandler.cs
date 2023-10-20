@@ -405,8 +405,11 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     // Used by AI to send move to all clients
     public void TryPlaceTileServer( TileComponent tile, Vector2Int gridPos )
     {
-        Debug.Assert( NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost );
-        TileDroppedClientRpc( tile.networkData, gridPos );
+        Debug.Assert( GameController.Instance.isOfflineGame || NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost );
+        if( NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost )
+            TileDroppedClientRpc( tile.networkData, gridPos );
+        else
+            TryPlaceTileOtherPlayer( tile.networkData, gridPos );
     }
 
     [ServerRpc( RequireOwnership = false )]
