@@ -24,6 +24,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         public Vector2Int gridPos;
         public int scoreTotal;
         public string challenger;
+        public TileComponent tileCopy;
     };
     private Utility.FunctionTimer challengeTimer;
     private ChallengeData challengePhaseData;
@@ -79,6 +80,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             StartChallengeTimer( tile, gridPos );
             PlaceTile( tile, gridPos );
             tile.SetGhosted( true );
+            tile.SetChallengeScoreText( challengePhaseData.scoreTotal );
             return true;
         }
 
@@ -152,7 +154,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         var player = NetworkManager.Singleton.ConnectedClients[rpcParams.Receive.SenderClientId];
         var name = player.PlayerObject.GetComponent<PlayerController>().playerName;
         challengePhaseData.challenger = name;
-        challengePhaseData.tile.SetBeingChallenged( name );
         ChallengeClientRpc( name );
     }
 
@@ -166,7 +167,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     {
         Debug.Assert( challengePhaseData != null );
         challengePhaseData.challenger = player;
-        challengePhaseData.tile.SetBeingChallenged( name );
         challengeTimer.Stop();
 
         challengeTimer = Utility.FunctionTimer.CreateTimer( GameConstants.Instance.challengeActionTimerSec, () =>
@@ -183,8 +183,10 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         if( GameController.Instance.localPlayerName == player )
         {
             board.Remove( challengePhaseData.gridPos );
+            challengePhaseData.tileCopy = Instantiate( challengePhaseData.tile, challengePhaseData.tile.transform.parent, true );
             challengePhaseData.tile.SetInteractable( true );
             challengePhaseData.tile.SetGhosted( false );
+            challengePhaseData.tile.ClearChallengeScoreText();
             challengePhaseData.tile.GetComponent<TileComponent>().OnDragStart();
             challengePhaseData.tile.GetComponent<Draggable>().ResetOffset();
         }
@@ -193,6 +195,9 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     private void ChallengeCleanup()
     {
         Debug.Assert( challengePhaseData != null );
+        challengePhaseData.tile.SetGhosted( false );
+        challengePhaseData.tile.ClearChallengeScoreText();
+        Destroy( challengePhaseData.tileCopy );
         challengePhaseData = null;
         challengeTimer.Stop();
     }
@@ -202,7 +207,6 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         var data = challengePhaseData;
         if( challengePhaseData.challenger != null )
             PlaceTile( data.tile, data.gridPos );
-        data.tile.SetGhosted( false );
         ChallengeCleanup();
 
         EventSystem.Instance.TriggerEvent( new TilePlacedEvent()

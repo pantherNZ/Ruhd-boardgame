@@ -5128,7 +5128,7 @@ Canvas:
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 2
-  m_Camera: {fileID: 0}
+  m_Camera: {fileID: 726910844}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -8706,6 +8706,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modifyListenerWithEnableDisable: 1
   AIControllerPrefab: {fileID: -4659832911578990274, guid: 71927d796ee231b4ba294c0835d89357, type: 3}
+  rngSeedRuntime: 0
   currentPlayerTurn: 
   localPlayerName: 
   currentChallenger: 

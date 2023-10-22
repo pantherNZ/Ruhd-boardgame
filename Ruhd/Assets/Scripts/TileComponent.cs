@@ -48,7 +48,6 @@ public class TileComponent : MonoBehaviour
     public bool draggable = true;
     private bool dragging;
     private bool interactable = true;
-    private string challenger;
 
     [HideInInspector] public Sprite backsideSprite;
     [SerializeField] GameObject ghostedSpritePrefab;
@@ -60,11 +59,13 @@ public class TileComponent : MonoBehaviour
     private Draggable draggableCmp;
     private TileHoverUI hoverCmp;
     private GameObject ghostedSprite;
+    private TMPro.TextMeshProUGUI challengeUI;
 
     private void Awake()
     {
         draggableCmp = GetComponent<Draggable>();
         hoverCmp = GetComponent<TileHoverUI>();
+        challengeUI = GetComponentInChildren<TMPro.TextMeshProUGUI>( true );
     }
 
     private void Start()
@@ -104,9 +105,16 @@ public class TileComponent : MonoBehaviour
         return ghostedSprite != null;
     }
 
-    public void SetBeingChallenged( string challenger )
+    public void SetChallengeScoreText( int score )
     {
-        this.challenger = challenger;
+        challengeUI.gameObject.SetActive( true );
+        challengeUI.text = score.ToString();
+        challengeUI.transform.localEulerAngles = new Vector3( 0.0f, 0.0f, -transform.localEulerAngles.z );
+    }
+
+    public void ClearChallengeScoreText()
+    {
+        challengeUI.gameObject.SetActive( false );
     }
 
     public void SkipRotateInterpolation()
