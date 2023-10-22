@@ -184,6 +184,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         {
             board.Remove( challengePhaseData.gridPos );
             challengePhaseData.tileCopy = Instantiate( challengePhaseData.tile, challengePhaseData.tile.transform.parent, true );
+            challengePhaseData.tileCopy.data = null;
             challengePhaseData.tile.SetInteractable( true );
             challengePhaseData.tile.SetGhosted( false );
             challengePhaseData.tile.ClearChallengeScoreText();
@@ -197,7 +198,8 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         Debug.Assert( challengePhaseData != null );
         challengePhaseData.tile.SetGhosted( false );
         challengePhaseData.tile.ClearChallengeScoreText();
-        Destroy( challengePhaseData.tileCopy );
+        if( challengePhaseData.tileCopy != null )
+            challengePhaseData.tileCopy.DestroyObject();
         challengePhaseData = null;
         challengeTimer.Stop();
     }
