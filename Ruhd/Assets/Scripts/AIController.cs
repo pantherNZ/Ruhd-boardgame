@@ -52,7 +52,7 @@ public class AIController : EventReceiverInstance
                         rot = rot,
                         tile = tile,
                         score = score.Sum( x => x.score )
-                    } ); ;
+                    } );
                 }
                 tile.rotation = originalRot;
             }

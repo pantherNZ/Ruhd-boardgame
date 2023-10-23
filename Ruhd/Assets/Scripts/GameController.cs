@@ -4,8 +4,10 @@ using System.Collections.Generic;
 class GameController : EventReceiverInstance
 {
     [SerializeField] AIController AIControllerPrefab;
+    [SerializeField] LocalPlayerController LocalControllerPrefab;
 
     private List<AIController> AIPlayers = new List<AIController>();
+    private LocalPlayerController localPlayer;
 
     static GameController _Instance;
     static public GameController Instance
@@ -48,6 +50,7 @@ class GameController : EventReceiverInstance
                 switch( player.type )
                 {
                     case NetworkHandler.PlayerType.Local:
+                        localPlayer = Instantiate( LocalControllerPrefab );
                         localPlayerName = player.name;
                         break;
                     case NetworkHandler.PlayerType.AI:
@@ -83,6 +86,8 @@ class GameController : EventReceiverInstance
             foreach( var x in AIPlayers )
                 x.DestroyObject();
             AIPlayers.Clear();
+            if( localPlayer != null )
+                localPlayer.DestroyObject();
         }
     }
 }

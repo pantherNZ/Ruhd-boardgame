@@ -11,6 +11,7 @@ enum MenuState
     HostGame,
     JoinGame,
     Lobby,
+    InGameMenu,
 }
 
 public class MenuUI : EventReceiverInstance
@@ -31,6 +32,7 @@ public class MenuUI : EventReceiverInstance
     [SerializeField] CanvasGroup hostGameInputScreen;
     [SerializeField] CanvasGroup joinGameInputScreen;
     [SerializeField] CanvasGroup lobbyGameScreen;
+    [SerializeField] CanvasGroup inGameMenuScreen;
 
     [Header( "Animation" )]
     [SerializeField] float fadeTimeSec = 0.5f;
@@ -77,7 +79,8 @@ public class MenuUI : EventReceiverInstance
             buttonsScreen,
             hostGameInputScreen,
             joinGameInputScreen,
-            lobbyGameScreen
+            lobbyGameScreen,
+            inGameMenuScreen,
         };
 
         Init();
@@ -324,12 +327,18 @@ public class MenuUI : EventReceiverInstance
         RequestStartGame( null );
     }
 
+    public void ShowInGameMenu()
+    {
+        ChangeStateByName( "InGameMenu" );
+        ToggleMenu( true );
+    }
+
     private void RequestStartGame( List<NetworkHandler.PlayerData> playerData)
     {
         if( !interactable )
             return;
 
-        StartCoroutine( ToggleMenu( false ) );
+        ToggleMenu( false );
         bool vsComputer = playerData == null;
 
         if( vsComputer )
@@ -360,10 +369,18 @@ public class MenuUI : EventReceiverInstance
         this.TryStopCoroutine( swapTilesRoutine2 );
     }
 
-    private IEnumerator ToggleMenu( bool show )
+    private void ToggleMenu( bool show )
+    {
+        if( gameObject.activeSelf == show )
+            return;
+
+        gameObject.SetActive( true );
+        StartCoroutine( ToggleMenuCoroutine( show ) );
+    }
+
+    private IEnumerator ToggleMenuCoroutine( bool show )
     {
         StopAnimations();
-        gameObject.SetActive( true );
 
         foreach( var tile in grid )
         {
@@ -417,7 +434,11 @@ public class MenuUI : EventReceiverInstance
         else if( e is ExitGameEvent )
         {
             Init();
-            StartCoroutine( ToggleMenu( true ) );
+            ToggleMenu( true );
+        }
+        else if( e is RequestPauseGameEvent )
+        {
+            ShowInGameMenu();
         }
     }
 
