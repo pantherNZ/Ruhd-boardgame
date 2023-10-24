@@ -309,13 +309,13 @@ public class MenuUI : EventReceiverInstance
         }
     }
 
-    public void ChangeStateByName( string stateName )
+    public void ChangeStateByName( string stateName, bool instant = false )
     {
         if( !interactable )
             return;
 
         var newState = Utility.ParseEnum<MenuState>( stateName );
-        ToggleFadeText( stateScreens[( int )state], stateScreens[( int )newState] );
+        ToggleFadeText( stateScreens[( int )state], stateScreens[( int )newState], instant );
         state = newState;
     }
 
@@ -327,10 +327,13 @@ public class MenuUI : EventReceiverInstance
         RequestStartGame( null );
     }
 
-    public void ShowInGameMenu()
+    public void ShowInGameMenu( bool show )
     {
-        ChangeStateByName( "InGameMenu" );
-        ToggleMenu( true );
+        if( show )
+            Init();
+        if( show )
+            ChangeStateByName( "InGameMenu", true );
+        ToggleMenu( show, 0.5f );
     }
 
     private void RequestStartGame( List<NetworkHandler.PlayerData> playerData)
@@ -369,18 +372,16 @@ public class MenuUI : EventReceiverInstance
         this.TryStopCoroutine( swapTilesRoutine2 );
     }
 
-    private void ToggleMenu( bool show )
+    private void ToggleMenu( bool show, float timeMultiplier = 1.0f )
     {
-        if( gameObject.activeSelf == show )
-            return;
-
         gameObject.SetActive( true );
-        StartCoroutine( ToggleMenuCoroutine( show ) );
+        StartCoroutine( ToggleMenuCoroutine( show, timeMultiplier ) );
     }
 
-    private IEnumerator ToggleMenuCoroutine( bool show )
+    private IEnumerator ToggleMenuCoroutine( bool show, float timeMultiplier = 1.0f )
     {
         StopAnimations();
+        interactable = false;
 
         foreach( var tile in grid )
         {
@@ -389,38 +390,38 @@ public class MenuUI : EventReceiverInstance
             tile.GetComponent<EventDispatcherV2>().enabled = false;
             var expandedRect = Camera.main.pixelRect;
             expandedRect.size += cellSize * 2.0f;
-            var originPos = tile.transform.localPosition;
+            var originPos = tile.transform.localPosition.ToVector2();
             var signPos = new Vector2( Mathf.Sign( originPos.x ), Mathf.Sign( originPos.y ) );
             var boundary = new Vector2( signPos.x * expandedRect.width / 2.0f, signPos.y * expandedRect.height / 2.0f );
             var closest = new Vector2( Mathf.Abs( boundary.x - originPos.x ), Mathf.Abs( boundary.y - originPos.y ) );
-            var exitPosition = new Vector3( closest.x < closest.y ? boundary.x : originPos.x, closest.x < closest.y ? originPos.y: boundary.y );
-            var delay = menuFadeOutDelaySec + Mathf.Round( ( ( exitPosition - originPos ).magnitude - cellSize.x * 2.0f ) / cellSize.x ) * menuFadeOutDelayPerTileSec;
-            
-            if( show )
-                tile.transform.localPosition = exitPosition;
+            var exitPosition = new Vector2( closest.x < closest.y ? boundary.x : originPos.x, closest.x < closest.y ? originPos.y : boundary.y );
+            tile.transform.localPosition = show ? exitPosition : originPos;
 
-            Utility.FunctionTimer.CreateTimer( delay + Random.Range( -0.1f, 0.1f ), () =>
+            var baseDelay = menuFadeOutDelaySec + Mathf.Round( ( ( exitPosition - originPos ).magnitude - cellSize.x * 2.0f ) / cellSize.x );
+            var tileFadeDelay = ( baseDelay * menuFadeOutDelayPerTileSec + Random.Range( -0.1f, 0.1f ) ) * timeMultiplier;
+
+            Utility.FunctionTimer.CreateTimer( tileFadeDelay, () =>
             {
-                StartCoroutine( Utility.InterpolatePosition( tile.transform, show ? originPos : exitPosition, menuFadeOutTimeSec + Random.Range( -0.1f, 0.1f ), true, Utility.Easing.Quintic.In ) );
+                var tileFadeTime = ( menuFadeOutTimeSec + Random.Range( -0.1f, 0.1f ) ) * timeMultiplier;
+                var easingFunc = show ? new Utility.EasingFunction( Utility.Easing.Quintic.Out ) : new Utility.EasingFunction( Utility.Easing.Quintic.In );
+                StartCoroutine( Utility.InterpolatePosition( tile.transform, show ? originPos : exitPosition, tileFadeTime, true, easingFunc ) );
             } );
         }
 
         if( show )
         {
-            interactable = false;
-            this.FadeToColour( background, Color.black, 1.0f, Utility.Easing.Quintic.In );
-            this.FadeToColour( blur, Color.white, 0.5f );
-            this.FadeFromTransparent( titleArea, 0.5f );
-            yield return new WaitForSeconds( 2.0f );
+            this.FadeToColour( background, Color.black, 1.0f * timeMultiplier, Utility.Easing.Quintic.In );
+            this.FadeToColour( blur, Color.white, 0.5f * timeMultiplier );
+            this.FadeFromTransparent( titleArea, 0.5f * timeMultiplier );
+            yield return new WaitForSeconds( 2.0f * timeMultiplier );
             interactable = true;
         }
         else
         {
-            interactable = false;
-            this.FadeToColour( background, Color.clear, 0.5f );
-            this.FadeToColour( blur, Color.clear, 1.0f );
-            this.FadeToTransparent( titleArea, 0.5f );
-            yield return new WaitForSeconds( 2.0f );
+            this.FadeToColour( background, Color.clear, 0.5f * timeMultiplier );
+            this.FadeToColour( blur, Color.clear, 1.0f * timeMultiplier );
+            this.FadeToTransparent( titleArea, 0.5f * timeMultiplier );
+            yield return new WaitForSeconds( 2.0f * timeMultiplier );
             gameObject.SetActive( false );
         }
     }
@@ -434,23 +435,33 @@ public class MenuUI : EventReceiverInstance
         else if( e is ExitGameEvent )
         {
             Init();
+            gameObject.SetActive( false );
             ToggleMenu( true );
         }
-        else if( e is RequestPauseGameEvent )
+        else if( e is RequestTogglePauseGameEvent )
         {
-            ShowInGameMenu();
+            if( !gameObject.activeSelf || interactable )
+                ShowInGameMenu( !gameObject.activeSelf );
         }
     }
 
-    public void ToggleFadeText( CanvasGroup fadeOut, CanvasGroup fadeIn )
+    public void ToggleFadeText( CanvasGroup fadeOut, CanvasGroup fadeIn, bool instant = false )
     {
-        fadeOut.gameObject.SetActive( true );
         fadeIn.gameObject.SetActive( true );
+        fadeOut.gameObject.SetActive( !instant );
 
         this.TryStopCoroutine( fadeInCoroutine );
         this.TryStopCoroutine( fadeOutCoroutine );
 
-        fadeInCoroutine = StartCoroutine( Utility.FadeFromTransparent( fadeIn, fadeTimeSec ) );
-        fadeOutCoroutine = StartCoroutine( Utility.FadeToTransparent( fadeOut, fadeTimeSec, null, true ) );
+        if( instant )
+        {
+            fadeIn.SetVisibility( true );
+            fadeOut.SetVisibility( false );
+        }
+        else
+        {
+            fadeInCoroutine = StartCoroutine( Utility.FadeFromTransparent( fadeIn, fadeTimeSec ) );
+            fadeOutCoroutine = StartCoroutine( Utility.FadeToTransparent( fadeOut, fadeTimeSec, null, true ) );
+        }
     }
 }

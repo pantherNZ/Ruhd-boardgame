@@ -13,6 +13,6 @@ public class LocalPlayerController : EventReceiverInstance
     private void Update()
     {
         if( Input.GetKeyDown( KeyCode.Escape ) )
-            EventSystem.Instance.TriggerEvent( new RequestPauseGameEvent() );
+            EventSystem.Instance.TriggerEvent( new RequestTogglePauseGameEvent() );
     }
 }

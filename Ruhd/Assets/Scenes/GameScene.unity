@@ -1391,7 +1391,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4131488015531618495, guid: a7d64d5f433168b4a85bcad1e66a574b, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 330
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 4470605676096022430, guid: a7d64d5f433168b4a85bcad1e66a574b, type: 3}
       propertyPath: m_AnchorMax.y
@@ -3372,7 +3372,7 @@ GameObject:
   - component: {fileID: 396741747}
   - component: {fileID: 396741746}
   m_Layer: 5
-  m_Name: LeaveBtn
+  m_Name: QuitBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3443,28 +3443,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 21042769}
-        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
-        m_MethodName: LeaveLobby
+      - m_Target: {fileID: 2077546456}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 2077546458}
-        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
-        m_MethodName: ChangeStateByName
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: Buttons
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &396741747
@@ -4042,7 +4030,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: LEAVE
+  m_text: QUIT
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 20dccb6169dadee48bb10dc068926381, type: 2}
   m_sharedMaterial: {fileID: -4503409106148480325, guid: 20dccb6169dadee48bb10dc068926381, type: 2}
@@ -6156,7 +6144,7 @@ GameObject:
   - component: {fileID: 981178633}
   - component: {fileID: 981178632}
   m_Layer: 5
-  m_Name: ReadyBtn
+  m_Name: ResumeBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6227,10 +6215,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 21042769}
-        m_TargetAssemblyTypeName: NetworkHandler, Assembly-CSharp
-        m_MethodName: ToggleReadyForGame
-        m_Mode: 1
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: ShowInGameMenu
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -8661,7 +8649,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1718301367}
   - component: {fileID: 1718301370}
-  - component: {fileID: 1718301369}
   - component: {fileID: 1718301368}
   m_Layer: 5
   m_Name: InGameMenu
@@ -8705,25 +8692,6 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
---- !u!114 &1718301369
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1718301366}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be6ed7455ed1928459bc05e7d3f3b90d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  modifyListenerWithEnableDisable: 1
-  codeLabel: {fileID: 0}
-  playersLabel: {fileID: 0}
-  playersDataLabel: {fileID: 0}
-  playersCountLabel: {fileID: 0}
-  startGameBtn: {fileID: 0}
-  toggleReadyBtn: {fileID: 981178632}
 --- !u!222 &1718301370
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -9269,7 +9237,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: READY
+  m_text: RESUME
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 20dccb6169dadee48bb10dc068926381, type: 2}
   m_sharedMaterial: {fileID: -4503409106148480325, guid: 20dccb6169dadee48bb10dc068926381, type: 2}
@@ -10911,7 +10879,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd713a8ff9c2634488b0e26562272a86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modifyListenerWithEnableDisable: 1
+  modifyListenerWithEnableDisable: 0
   background: {fileID: 1803416939}
   blur: {fileID: 563496707}
   titleArea: {fileID: 306257439}
@@ -10928,7 +10896,7 @@ MonoBehaviour:
   hostGameInputScreen: {fileID: 1759706117}
   joinGameInputScreen: {fileID: 1814734268}
   lobbyGameScreen: {fileID: 1889614996}
-  inGameMenuScreen: {fileID: 0}
+  inGameMenuScreen: {fileID: 1718301368}
   fadeTimeSec: 0.2
   tileMoveTimerMin: 2
   tileMoveTimerMax: 10
@@ -11478,7 +11446,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5621729030444875955, guid: b0df9e0bae95d8248aa51ebcdf24b70d, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 330
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5836712247467187426, guid: b0df9e0bae95d8248aa51ebcdf24b70d, type: 3}
       propertyPath: m_AnchorMax.y

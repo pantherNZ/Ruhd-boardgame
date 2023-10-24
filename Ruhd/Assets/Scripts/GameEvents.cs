@@ -62,4 +62,4 @@ class ChallengeStartedEvent : IBaseEvent
     public BoardHandler.ChallengeData challengeData;
 }
 
-class RequestPauseGameEvent : IBaseEvent { }
+class RequestTogglePauseGameEvent : IBaseEvent { }
