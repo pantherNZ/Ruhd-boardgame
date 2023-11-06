@@ -309,7 +309,12 @@ public class MenuUI : EventReceiverInstance
         }
     }
 
-    public void ChangeStateByName( string stateName, bool instant = false )
+    public void ChangeStateByName( string stateName )
+    {
+        ChangeStateByName( stateName, false );
+    }
+
+    public void ChangeStateByName( string stateName, bool instant )
     {
         if( !interactable )
             return;
@@ -362,6 +367,11 @@ public class MenuUI : EventReceiverInstance
             playerData = playerData, 
             vsComputer = vsComputer 
         } );
+    }
+
+    public void LeaveGame()
+    {
+        EventSystem.Instance.TriggerEvent( new ExitGameEvent() );
     }
 
     private void StopAnimations()
@@ -432,11 +442,13 @@ public class MenuUI : EventReceiverInstance
         {
             RequestStartGame( requestStartGameEvent.playerData );
         }
-        else if( e is ExitGameEvent )
+        else if( e is ExitGameEvent exitGameEvent )
         {
             Init();
             gameObject.SetActive( false );
-            ToggleMenu( true );
+            if( exitGameEvent.fromGameOver )
+                ToggleMenu( true );
+            NetworkManager.Singleton.GetComponent<NetworkHandler>().ExitGame();
         }
         else if( e is RequestTogglePauseGameEvent )
         {

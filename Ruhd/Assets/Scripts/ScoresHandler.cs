@@ -33,6 +33,7 @@ public class ScoresHandler : EventReceiverInstance
         public string name;
         public int score;
         public int playerIdx;
+        public bool disconnected;
     }
 
     class PlayerEntry : BasePlayerEntry
@@ -78,6 +79,12 @@ public class ScoresHandler : EventReceiverInstance
         else if( e is TurnStartEvent turnStartEvent )
         {
             SetTurnHighlight( turnStartEvent.player );
+        }
+        else if( e is PlayerDisconnectedEvent disconnectEvent )
+        {
+            var found = players.Find( x => x.name == disconnectEvent.player );
+            if( found != null )
+                found.nameText.text = $"<s>{found.nameText.text}</s>";
         }
     }
 

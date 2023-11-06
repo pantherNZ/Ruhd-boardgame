@@ -1391,7 +1391,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4131488015531618495, guid: a7d64d5f433168b4a85bcad1e66a574b, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 30
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4470605676096022430, guid: a7d64d5f433168b4a85bcad1e66a574b, type: 3}
       propertyPath: m_AnchorMax.y
@@ -3443,13 +3443,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2077546456}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 2077546458}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: LeaveGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -8656,7 +8656,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1718301367
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10112,7 +10112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be6ed7455ed1928459bc05e7d3f3b90d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modifyListenerWithEnableDisable: 1
+  modifyListenerWithEnableDisable: 0
   codeLabel: {fileID: 752361644}
   playersLabel: {fileID: 1479654048}
   playersDataLabel: {fileID: 86535649}
@@ -11446,7 +11446,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5621729030444875955, guid: b0df9e0bae95d8248aa51ebcdf24b70d, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 30
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5836712247467187426, guid: b0df9e0bae95d8248aa51ebcdf24b70d, type: 3}
       propertyPath: m_AnchorMax.y

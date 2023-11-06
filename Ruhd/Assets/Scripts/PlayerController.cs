@@ -26,6 +26,7 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
         if( IsServer )
         {
             NetworkManager.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
+            NetworkManager.OnClientDisconnectCallback += NetworkManager_OnClientDisconnectedCallback;
         }
         else if( IsClient )
         {
@@ -44,6 +45,28 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
         this.clientId = clientId;
     }
 
+    private void NetworkManager_OnClientDisconnectedCallback( ulong clientId )
+    {
+        Debug.Log( "Player disconnected: " + playerName );
+        if( clientId == this.clientId )
+            ExitGameClientRpc();
+    }
+
+    [ServerRpc( RequireOwnership = false )]
+    private void RequestExitGameServerRpc()
+    {
+        ExitGameClientRpc();
+    }
+
+    [ClientRpc]
+    private void ExitGameClientRpc()
+    {
+        EventSystem.Instance.TriggerEvent( new PlayerDisconnectedEvent()
+        {
+            player = playerName
+        } );
+    }
+
     public void OnEventReceived( IBaseEvent e )
     {
         if( e is TurnStartEvent turnStart )
@@ -56,9 +79,13 @@ public class PlayerController : NetworkBehaviour, IEventReceiver
             var found = startgame.playerData.Find( x => x.clientId == this.clientId );
             playerName = found.name;
         }
-        else if( e is ChallengeStartedEvent challengeStarted )
+        else if( e is ExitGameEvent exitGame )
         {
-            //challengeStarted.challengeData.tile
+            // Player has chosen to leave game via menu
+            if( !exitGame.fromGameOver )
+            {
+                RequestExitGameServerRpc();
+            }
         }
     }
 }

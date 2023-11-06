@@ -22,7 +22,12 @@ class TilePlacedEvent : IBaseEvent
 
 class TurnStartEvent : IBaseEvent
 {
-    public string player = null;
+    public string player;
+}
+
+class PlayerDisconnectedEvent : IBaseEvent
+{
+    public string player;
 }
 
 class LobbyUpdatedEvent : IBaseEvent
@@ -41,7 +46,7 @@ class PlayerScoreEvent : IBaseEvent
 
 class RequestStartGameEvent : IBaseEvent
 {
-    public List<NetworkHandler.PlayerData> playerData; // No data means vs AI
+    public List<NetworkHandler.PlayerData> playerData;
 }
 
 class PreStartGameEvent : IBaseEvent { }
@@ -52,7 +57,10 @@ class StartGameEvent : IBaseEvent
     public bool vsComputer;
 }
 
-class ExitGameEvent : IBaseEvent { }
+class ExitGameEvent : IBaseEvent 
+{
+    public bool fromGameOver;
+}
 
 class GameOverEvent : IBaseEvent { }
 

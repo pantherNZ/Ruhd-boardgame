@@ -51,7 +51,7 @@ public class GameOverUI : EventReceiverInstance
 
     public void ExitGame()
     {
-        EventSystem.Instance.TriggerEvent( new ExitGameEvent() );
+        EventSystem.Instance.TriggerEvent( new ExitGameEvent() { fromGameOver = true } );
         showPanelButtonRef.SetVisibility( false );
         resultsPanelRef.GetComponent<CanvasGroup>().SetVisibility( false );
         resultsPanelRef.SetActive( false );
@@ -84,7 +84,7 @@ public class GameOverUI : EventReceiverInstance
     private IEnumerator ShowResult( ScoresHandler.BasePlayerEntry score, float scale )
     {
         var resultDisplay = Instantiate( playerResultPrefab, resultsLayoutgroupRef.transform );
-        resultDisplay.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = score.name.ToString();
+        resultDisplay.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = $"{(score.disconnected ? "<s>" : string.Empty)}{score.name}{(score.disconnected ? "</s>" : string.Empty)}";
         resultDisplay.GetComponentInChildren<TextNumberAnimatorGroupUI>().SetValue( score.score );
         var group = resultDisplay.GetComponent<CanvasGroup>();
         group.SetVisibility( false );

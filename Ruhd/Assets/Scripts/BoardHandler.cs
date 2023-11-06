@@ -373,6 +373,10 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
         {
             ResetGame( startGame.playerData.Select( x => x.name ).ToList() );
         }
+        else if( e is ExitGameEvent exitGame )
+        {
+
+        }
     }
 
     private TileComponent FindTileFromNetworkData( TileNetworkData data )
