@@ -63,17 +63,6 @@ public class NetworkHandler : MonoBehaviour
         };
 
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
-
-        // ParrelSync should only be used within the Unity Editor so you should use the UNITY_EDITOR define
-//#if UNITY_EDITOR
-//        if( ParrelSync.ClonesManager.IsClone() )
-//        {
-//            // When using a ParrelSync clone, switch to a different authentication profile to force the clone
-//            // to sign in as a different anonymous user account.
-//            string customArgument = ParrelSync.ClonesManager.GetArgument();
-//            AuthenticationService.Instance.SwitchProfile( $"Clone_{customArgument}_Profile" );
-//        }
-//#endif
     }
 
     public void ConfirmName( TMPro.TMP_InputField input )
@@ -132,10 +121,14 @@ public class NetworkHandler : MonoBehaviour
             };
 
             lobby = await LobbyService.Instance.CreateLobbyAsync( localPlayerData.name, 4, lobbyOptions );
-            EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent() 
-            { 
-                lobby = lobby,
-                playerData = GetPlayerData()
+            // Delay 1 frame so that the lobby ui has been enabled by then and it actually gets the event
+            Utility.FunctionTimer.CreateTimer( 0.01f, () =>
+            {
+                EventSystem.Instance.TriggerEvent( new LobbyUpdatedEvent()
+                {
+                    lobby = lobby,
+                    playerData = GetPlayerData()
+                } );
             } );
             lobbyHeartbeatCoroutine = StartCoroutine( SendLobbyHeartbeat() );
             ListenForLobbyUpdates();
@@ -180,6 +173,11 @@ public class NetworkHandler : MonoBehaviour
         }
 
         lobby = null;
+    }
+
+    public void ExitGame()
+    {
+        NetworkManager.Singleton.Shutdown();
     }
 
     public async void ToggleReadyForGame()
