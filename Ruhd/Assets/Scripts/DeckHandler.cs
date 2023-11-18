@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
@@ -10,10 +11,12 @@ public class DeckHandler : EventReceiverInstance
     [SerializeField] HorizontalLayoutGroup slotsPanelUI;
     [SerializeField] TileComponent tilePrefab;
     [SerializeField] Sprite cardBackSprite;
+    [SerializeField] TMPro.TextMeshProUGUI cardsLeftText;
     private List<TileComponent> openHand = new List<TileComponent>();
     private List<TileData> allTiles = new List<TileData>();
     private int? selectedCardFromSlot;
     private int numPlayers;
+    private Coroutine textSpinRoutine;
 
     protected override void Start()
     {
@@ -31,6 +34,8 @@ public class DeckHandler : EventReceiverInstance
 
         for( int i = 0; i < GetNumStartingCards(); ++i )
             DrawCardToOpenHand( rng );
+
+        allTiles.Resize( GetNumTotalCards() );
     }
 
     public bool IsDeckEmpty()
@@ -62,7 +67,21 @@ public class DeckHandler : EventReceiverInstance
         if( rng != null )
             newCard.rotation = Utility.GetEnumValues<Side>().RandomItem( rng: rng );
 
+        if( cardsLeftText != null )
+        {
+            cardsLeftText.text = allTiles.Count.ToString();
+            if( textSpinRoutine == null )
+                textSpinRoutine = StartCoroutine( AnimateCardsLeftText() );
+        }
+
         return newCard;
+    }
+
+    private IEnumerator AnimateCardsLeftText()
+    {
+        yield return Utility.InterpolateRotation( cardsLeftText.transform, new Vector3( 0.0f, 0.0f, 180.0f ), 0.5f, true, Utility.Easing.Bounce.In );
+        yield return Utility.InterpolateRotation( cardsLeftText.transform, new Vector3( 0.0f, 0.0f, 170.0f ), 0.5f, true, Utility.Easing.Linear );
+        textSpinRoutine = null;
     }
 
     public void DrawCardToOpenHand( Utility.IRandom rng )
@@ -138,6 +157,11 @@ public class DeckHandler : EventReceiverInstance
 
     int GetNumStartingCards()
     {
-        return slotsPanelUI == null ? 0 : Mathf.Max( 2, numPlayers );
+        return slotsPanelUI == null ? 0 : 1;// Mathf.Clamp( numPlayers + 1, 2, 4 );
+    }
+
+    int GetNumTotalCards()
+    {
+        return Mathf.Clamp( numPlayers * 6, 0, allTiles.Count );
     }
 }
