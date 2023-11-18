@@ -31,11 +31,11 @@ public class DeckHandler : EventReceiverInstance
         foreach( var card in DataHandler.GetAllCards() )
             allTiles.Add( Instantiate( card ) );
         allTiles.RandomShuffle( rng );
+        allTiles.Resize( GetNumTotalCards() );
 
         for( int i = 0; i < GetNumStartingCards(); ++i )
             DrawCardToOpenHand( rng );
 
-        allTiles.Resize( GetNumTotalCards() );
     }
 
     public bool IsDeckEmpty()
@@ -79,8 +79,11 @@ public class DeckHandler : EventReceiverInstance
 
     private IEnumerator AnimateCardsLeftText()
     {
-        yield return Utility.InterpolateRotation( cardsLeftText.transform, new Vector3( 0.0f, 0.0f, 180.0f ), 0.5f, true, Utility.Easing.Bounce.In );
-        yield return Utility.InterpolateRotation( cardsLeftText.transform, new Vector3( 0.0f, 0.0f, 170.0f ), 0.5f, true, Utility.Easing.Linear );
+        var spinTimeSec = 0.2f / 3.0f;
+        var rot = new Vector3( 0.0f, 0.0f, -360.0f / 3.0f );
+        yield return Utility.InterpolateRotation( cardsLeftText.transform, rot, spinTimeSec, true, Utility.Easing.Elastic.In );
+        yield return Utility.InterpolateRotation( cardsLeftText.transform, rot, spinTimeSec, true, Utility.Easing.Linear );
+        yield return Utility.InterpolateRotation( cardsLeftText.transform, rot, spinTimeSec, true, Utility.Easing.Linear );
         textSpinRoutine = null;
     }
 
@@ -157,11 +160,11 @@ public class DeckHandler : EventReceiverInstance
 
     int GetNumStartingCards()
     {
-        return slotsPanelUI == null ? 0 : 1;// Mathf.Clamp( numPlayers + 1, 2, 4 );
+        return slotsPanelUI == null ? 0 : Mathf.Clamp( numPlayers + 1, 2, 4 );
     }
 
     int GetNumTotalCards()
     {
-        return Mathf.Clamp( numPlayers * 6, 0, allTiles.Count );
+        return 4 + Mathf.Clamp( numPlayers * 6, 0, allTiles.Count );
     }
 }
