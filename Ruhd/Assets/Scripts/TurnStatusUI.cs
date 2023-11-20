@@ -39,7 +39,7 @@ public class TurnStatusUI : EventReceiverInstance
         else if ( e is GameOverEvent )
         {
             gameOver = true;
-            Utility.FunctionTimer.CreateTimer( 3.0f, () =>
+            Utility.FunctionTimer.CreateTimer( 5.0f, () =>
             {
                 label.text = "GAME OVER";
             } );
