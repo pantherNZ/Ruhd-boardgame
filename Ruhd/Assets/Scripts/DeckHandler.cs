@@ -165,6 +165,6 @@ public class DeckHandler : EventReceiverInstance
 
     int GetNumTotalCards()
     {
-        return 4 + Mathf.Clamp( numPlayers * 6, 0, allTiles.Count );
+        return slotsPanelUI == null ? allTiles.Count : ( 4 + Mathf.Clamp( numPlayers * 6, 0, allTiles.Count ) );
     }
 }

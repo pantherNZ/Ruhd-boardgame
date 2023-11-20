@@ -77,6 +77,10 @@ class GameController : EventReceiverInstance
         {
             currentPlayerTurn = turnStart.player;
         }
+        else if( e is TilePlacedEvent tilePlaced && tilePlaced.waitingForChallenge )
+        {
+            currentPlayerTurn = null;
+        }
         else if( e is ChallengeStartedEvent challengeStarted )
         {
             currentChallenger = challengeStarted.player;

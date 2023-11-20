@@ -67,13 +67,17 @@ public class ScoresHandler : EventReceiverInstance
         else if( e is PlayerScoreEvent scoreEvent )
         {
             SetTurnHighlight( scoreEvent.player );
-            var playerIdx = players.FindIndex( x => x.name == scoreEvent.player );
-            foreach( var (idx, scoreInfo) in scoreEvent.scoreModifiers.Enumerate() )
+
+            if( scoreEvent.scoreModifiers != null )
             {
-                Utility.FunctionTimer.CreateTimer( 1.5f * idx, () =>
+                var playerIdx = players.FindIndex( x => x.name == scoreEvent.player );
+                foreach( var (idx, scoreInfo) in scoreEvent.scoreModifiers.Enumerate() )
                 {
-                    StartCoroutine( CreateScoreDisplayUI( scoreInfo, playerIdx, scoreEvent.placedTile.transform as RectTransform ) );
-                } );
+                    Utility.FunctionTimer.CreateTimer( 1.2f * idx, () =>
+                    {
+                        StartCoroutine( CreateScoreDisplayUI( scoreInfo, playerIdx, scoreEvent.placedTile.transform as RectTransform ) );
+                    } );
+                }
             }
         }
         else if( e is TurnStartEvent turnStartEvent )

@@ -19,6 +19,8 @@ public class GameOverUI : EventReceiverInstance
     [SerializeField] float resultStartScale = 5.0f;
     [SerializeField] float resultScaleInterpTimeSec = 1.0f;
 
+    private bool gameOver;
+
     protected override void Start()
     {
         base.Start();
@@ -61,23 +63,31 @@ public class GameOverUI : EventReceiverInstance
     {
         if( e is GameOverEvent )
         {
-            TogglePanel();
-
-            var scores = scoresHandlerRef.CurrentScores.ToList();
-            scores.Sort( ( x, y ) => x.score - y.score );
-            foreach( var (idx, score) in scores.Enumerate() )
-            {
-                Utility.FunctionTimer.CreateTimer( panelScoresDelaySec + idx * panelPerScoreDelaySec, () =>
-                {
-                    StartCoroutine( ShowResult( score, idx == 0 ? 1.0f : 0.9f ) );
-                } );
-            }
+            gameOver = true;
         }
         else if( e is StartGameEvent )
         {
+            gameOver = false;
             resultsPanelRef.GetComponent<CanvasGroup>().SetVisibility( false );
             resultsPanelRef.SetActive( false );
             resultsLayoutgroupRef.transform.DestroyChildren();
+        }
+        else if( e is PlayerScoreEvent && gameOver )
+        {
+            Utility.FunctionTimer.CreateTimer( 3.0f, () =>
+            {
+                TogglePanel();
+
+                var scores = scoresHandlerRef.CurrentScores.ToList();
+                scores.Sort( ( x, y ) => x.score - y.score );
+                foreach( var (idx, score) in scores.Enumerate() )
+                {
+                    Utility.FunctionTimer.CreateTimer( panelScoresDelaySec + idx * panelPerScoreDelaySec, () =>
+                    {
+                        StartCoroutine( ShowResult( score, idx == 0 ? 1.0f : 0.9f ) );
+                    } );
+                }
+            } );
         }
     }
 

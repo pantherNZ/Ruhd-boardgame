@@ -41,9 +41,7 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
     {
         EventSystem.Instance.AddSubscriber( this );
 
-        boardSize = 8;// Mathf.Min(
-                      //Mathf.FloorToInt( grid.rect.width / cellSize.x ),
-                      //Mathf.FloorToInt( grid.rect.height / cellSize.y ) );
+        boardSize = 8;
     }
 
     private void ResetGame( List<string> playerNames )
@@ -100,16 +98,13 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
             PlaceTile( tile, gridPos );
             List<ScoreInfo> scoreResults = EvaluateScore( gridPos, null );
 
-            if( scoreResults != null && scoreResults.Count > 0 )
+            EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
             {
-                EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
-                {
-                    player = currentPlayerturn,
-                    scoreModifiers = scoreResults,
-                    placedTile = challengePhaseData != null ? challengePhaseData.tile : tile,
-                    fromChallenge = challengePhaseData != null,
-                } );
-            }
+                player = currentPlayerturn,
+                scoreModifiers = scoreResults,
+                placedTile = challengePhaseData != null ? challengePhaseData.tile : tile,
+                fromChallenge = challengePhaseData != null,
+            } );
         }
 
         if( challengePhaseData != null )
@@ -219,16 +214,13 @@ public class BoardHandler : NetworkBehaviour, IEventReceiver
 
         List<ScoreInfo> scoreResults = EvaluateScore( data.gridPos, null );
 
-        if( scoreResults != null && scoreResults.Count > 0 )
+        EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
         {
-            EventSystem.Instance.TriggerEvent( new PlayerScoreEvent()
-            {
-                player = currentPlayerturn,
-                scoreModifiers = scoreResults,
-                placedTile = data.tile,
-                fromChallenge = false,
-            } );
-        }
+            player = currentPlayerturn,
+            scoreModifiers = scoreResults,
+            placedTile = data.tile,
+            fromChallenge = false,
+        } );
 
         NextTurn();
     }
