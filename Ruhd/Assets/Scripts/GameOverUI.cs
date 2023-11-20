@@ -79,7 +79,7 @@ public class GameOverUI : EventReceiverInstance
                 TogglePanel();
 
                 var scores = scoresHandlerRef.CurrentScores.ToList();
-                scores.Sort( ( x, y ) => x.score - y.score );
+                scores.Sort( ( x, y ) => y.score - x.score );
                 foreach( var (idx, score) in scores.Enumerate() )
                 {
                     Utility.FunctionTimer.CreateTimer( panelScoresDelaySec + idx * panelPerScoreDelaySec, () =>
