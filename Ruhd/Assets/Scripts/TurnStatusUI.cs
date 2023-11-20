@@ -9,7 +9,7 @@ public class TurnStatusUI : EventReceiverInstance
     {
         if( e is StartGameEvent )
         {
-            gameOver = true;
+            gameOver = false;
         }
         else if( e is TilePlacedEvent tilePlaced && !gameOver )
         {
