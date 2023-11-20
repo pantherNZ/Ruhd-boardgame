@@ -3,10 +3,15 @@ using UnityEngine;
 public class TurnStatusUI : EventReceiverInstance
 {
     [SerializeField] TMPro.TextMeshProUGUI label;
+    private bool gameOver;
 
     public override void OnEventReceived( IBaseEvent e )
     {
-        if( e is TilePlacedEvent tilePlaced )
+        if( e is StartGameEvent )
+        {
+            gameOver = true;
+        }
+        else if( e is TilePlacedEvent tilePlaced && !gameOver )
         {
             if( GameController.Instance.isLocalPlayerTurn )
             {
@@ -20,7 +25,7 @@ public class TurnStatusUI : EventReceiverInstance
         {
             label.text = "CHALLENGE";
         }
-        else if( e is TurnStartEvent turnStart )
+        else if( e is TurnStartEvent turnStart && !gameOver )
         {
             if( GameController.Instance.isLocalPlayerTurn )
             {
@@ -33,7 +38,11 @@ public class TurnStatusUI : EventReceiverInstance
         }
         else if ( e is GameOverEvent )
         {
-
+            gameOver = true;
+            Utility.FunctionTimer.CreateTimer( 3.0f, () =>
+            {
+                label.text = "GAME OVER";
+            } );
         }
     }
 }
